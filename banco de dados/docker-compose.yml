@@ -4,12 +4,12 @@ version: '3.8'
 services:
   postgres:
     image: postgres:17
-    container_name: postgresql_TaskHub
+    container_name: postgresql_FinanCerto
     restart: always
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: meubanco
+      POSTGRES_DB: finanCerto
     ports:
       - "5432:5432"
     volumes:

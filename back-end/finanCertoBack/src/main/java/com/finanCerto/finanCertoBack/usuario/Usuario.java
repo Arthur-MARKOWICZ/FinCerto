@@ -1,5 +1,6 @@
 package com.finanCerto.finanCertoBack.usuario;
 
+import com.finanCerto.finanCertoBack.usuario.dtos.UsuarioCadastroDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,8 +28,12 @@ public class Usuario  implements UserDetails {
     private String email;
     @Column(nullable = false)
     private String senha;
-    @Column(nullable = false)
-    private String dataNasc;
+
+    public Usuario(UsuarioCadastroDto dto) {
+        this.nome = dto.nome();
+        this.email = dto.email();
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
