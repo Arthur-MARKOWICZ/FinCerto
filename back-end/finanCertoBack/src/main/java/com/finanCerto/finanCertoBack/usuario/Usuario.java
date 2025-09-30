@@ -2,6 +2,8 @@ package com.finanCerto.finanCertoBack.usuario;
 
 import com.finanCerto.finanCertoBack.usuario.dtos.UsuarioCadastroDto;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,10 +25,13 @@ public class Usuario  implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     @Column(nullable = false)
+    @NotBlank
     private String nome;
     @Column(unique = true,nullable = false)
+    @Email
     private String email;
     @Column(nullable = false)
+    @NotBlank
     private String senha;
 
     public Usuario(UsuarioCadastroDto dto) {
