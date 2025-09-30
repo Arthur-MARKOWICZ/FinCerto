@@ -1,5 +1,7 @@
 package com.finanCerto.finanCertoBack.usuario;
 
+import com.finanCerto.finanCertoBack.usuario.dtos.LoginRequestDto;
+import com.finanCerto.finanCertoBack.usuario.dtos.LoginResponseDto;
 import com.finanCerto.finanCertoBack.usuario.dtos.UsuarioCadastroDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,5 +22,10 @@ public class UsuarioController {
     public ResponseEntity<Usuario> cadastro(@RequestBody UsuarioCadastroDto dto){
         Usuario usuario = service.cadastro(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
+    }
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto dto){
+        LoginResponseDto response = service.login(dto);
+        return ResponseEntity.ok(response);
     }
 }
