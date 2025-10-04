@@ -1,6 +1,7 @@
 package com.finanCerto.finanCertoBack.conta;
 
 import com.finanCerto.finanCertoBack.conta.dtos.ContaCadastroDto;
+import com.finanCerto.finanCertoBack.exception.ContaComOMesmoNome;
 import com.finanCerto.finanCertoBack.exception.UsuarioNaoEncontrado;
 import com.finanCerto.finanCertoBack.security.TokenService;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
@@ -24,6 +25,9 @@ public class ContaService {
         Optional<Usuario> usuario = usuarioRepository.findByEmail(email);
         if(usuario.isEmpty()){
             throw  new UsuarioNaoEncontrado("Usuario nao encontrado");
+        }
+        if(repository.existsByUsuarioIdAndNome(usuario.get().getId(), dto.nome())){
+            throw  new ContaComOMesmoNome("ja existe uma conta com este nome");
         }
         Conta conta = new Conta(dto,usuario.get());
         repository.save(conta);
