@@ -1,5 +1,6 @@
 package com.finanCerto.finanCertoBack.conta;
 
+import com.finanCerto.finanCertoBack.conta.dtos.ContaCadastroDto;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -27,7 +28,14 @@ public class Conta {
     @Column(nullable = false)
     @NotNull
     private double saldoInicial;
-    @OneToMany
+    @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
+
+    public Conta(ContaCadastroDto dto, Usuario usuario) {
+        this.nome = dto.nome();
+        this.saldoInicial = dto.saldoInicial();
+        this.tipo = dto.tipos();
+        this.usuario = usuario;
+    }
 }
