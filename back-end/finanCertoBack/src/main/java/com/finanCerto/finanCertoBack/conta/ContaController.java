@@ -1,12 +1,10 @@
 package com.finanCerto.finanCertoBack.conta;
 
 import com.finanCerto.finanCertoBack.conta.dtos.ContaCadastroDto;
+import com.finanCerto.finanCertoBack.conta.dtos.ContaObterPorNome;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/contas")
@@ -20,5 +18,10 @@ public class ContaController {
     public ResponseEntity<Conta> cadastro (@RequestBody ContaCadastroDto dto){
         Conta conta = service.cadastro(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(conta);
+    }
+    @PostMapping("obterPorNome")
+    public ResponseEntity<Conta> obterPorNome(@RequestBody ContaObterPorNome dto){
+        Conta conta = service.obterContaPorNome(dto);
+        return ResponseEntity.ok(conta);
     }
 }

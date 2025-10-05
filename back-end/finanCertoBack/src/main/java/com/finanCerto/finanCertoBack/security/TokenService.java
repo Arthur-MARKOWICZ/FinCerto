@@ -6,7 +6,9 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.finanCerto.finanCertoBack.exception.UsuarioNaoEncontrado;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
+import com.finanCerto.finanCertoBack.usuario.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.Optional;
 
 @Service
 public class TokenService {
@@ -21,7 +24,13 @@ public class TokenService {
     private String secret ;
     @Value("${jwt.expiration}")
     private long jwtExpiration;
+    private final UsuarioRepository usuarioRepository;
     private  Long REFRESH_TOKEN_EXPIRATION = 1000L * 60 * 60 * 24 * 7;
+
+    public TokenService(UsuarioRepository usuarioRepository) {
+        this.usuarioRepository = usuarioRepository;
+    }
+
     private Algorithm algorithm() {
         return Algorithm.HMAC256(secret);
     }
@@ -62,5 +71,13 @@ public class TokenService {
     }
     private Instant generateExpirationDate(){
         return LocalDateTime.now().plusHours(24).toInstant(ZoneOffset.of("-03:00"));
+    }
+    public Usuario obterUsuario(String token){
+        String email = getSubject(token);
+        Optional<Usuario> usuario = usuarioRepository.findByEmail(email);
+        if(usuario.isEmpty()){
+            throw  new UsuarioNaoEncontrado("Usuario nao encontrado");
+        }
+        return usuario.get();
     }
 }
