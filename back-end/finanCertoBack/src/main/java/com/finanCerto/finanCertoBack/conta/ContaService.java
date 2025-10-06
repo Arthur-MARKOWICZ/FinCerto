@@ -8,6 +8,8 @@ import com.finanCerto.finanCertoBack.exception.UsuarioNaoEncontrado;
 import com.finanCerto.finanCertoBack.security.TokenService;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import com.finanCerto.finanCertoBack.usuario.UsuarioRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -38,6 +40,11 @@ public class ContaService {
             throw new ContaNaoEncontrada("Conta nao foi encontrada");
         }
         return contaOptional.get();
+    }
+    public Page<Conta> pegarTodosPorUsuarioId(String token, Pageable pageable){
+        Usuario usuario = tokenService.obterUsuario(token);
+        Page<Conta> contas = repository.findAllByUsuarioId(usuario.getId(), pageable);
+        return contas;
     }
 
 }
