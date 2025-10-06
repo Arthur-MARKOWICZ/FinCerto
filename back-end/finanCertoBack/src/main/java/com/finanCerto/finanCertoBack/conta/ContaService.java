@@ -8,6 +8,7 @@ import com.finanCerto.finanCertoBack.exception.UsuarioNaoEncontrado;
 import com.finanCerto.finanCertoBack.security.TokenService;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import com.finanCerto.finanCertoBack.usuario.UsuarioRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -46,5 +47,26 @@ public class ContaService {
         Page<Conta> contas = repository.findAllByUsuarioId(usuario.getId(), pageable);
         return contas;
     }
+    @Transactional
+    public Conta atualizarConta(Long id ,ContaCadastroDto dto){
+        Optional<Conta> contaOptional = repository.findById(id);
+        if(contaOptional.isEmpty()){
+            throw new ContaNaoEncontrada("A conta nao foi encontrada");
+        }
+        Conta conta = contaOptional.get();
+        conta.setNome(dto.nome());
+        conta.setSaldoInicial(dto.saldoInicial());
+        conta.setTipo(dto.tipos());
+        return conta;
+    }
+
+    public double pegarSaldoConta(Long id){
+        Optional<Conta> contaOptional = repository.findById(id);
+        if(contaOptional.isEmpty()){
+            throw new ContaNaoEncontrada("A conta nao foi encontrada");
+        }
+        return contaOptional.get().getSaldoInicial();
+    }
+
 
 }

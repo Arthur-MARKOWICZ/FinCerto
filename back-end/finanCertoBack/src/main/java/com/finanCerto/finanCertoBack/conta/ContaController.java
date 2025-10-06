@@ -33,4 +33,14 @@ public class ContaController {
         Page<Conta> contas = service.pegarTodosPorUsuarioId(token, pageable);
         return ResponseEntity.ok(contas);
     }
+    @PostMapping("/alterarDadosConta")
+    public ResponseEntity<Conta> alterarDadosConta(@RequestBody ContaCadastroDto dto, Long id){
+        Conta conta = service.atualizarConta(id,dto);
+        return ResponseEntity.ok(conta);
+    }
+    @GetMapping("/saldo/{id}")
+    public ResponseEntity<Double> obterSaldo(@PathVariable Long id){
+        Double saldo = service.pegarSaldoConta(id);
+        return ResponseEntity.ok(saldo);
+    }
 }
