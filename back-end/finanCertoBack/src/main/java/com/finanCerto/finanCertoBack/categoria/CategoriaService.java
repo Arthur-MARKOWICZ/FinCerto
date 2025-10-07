@@ -22,6 +22,7 @@ public class CategoriaService {
         }
         Categoria categoria = new Categoria(dto);
         categoria.setUsuario(usuario);
+        repository.save(categoria);
         return categoria;
     }
 }

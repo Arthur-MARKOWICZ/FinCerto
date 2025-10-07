@@ -29,7 +29,7 @@ public class Categoria {
     @Column(nullable = false)
     @NotNull
     private Tipo tipo;
-    @Column(nullable = false)
+
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
