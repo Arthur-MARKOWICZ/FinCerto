@@ -1,5 +1,6 @@
 package com.finanCerto.finanCertoBack.categoria;
 
+import com.finanCerto.finanCertoBack.categoria.dto.CategoriaCadastroDto;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -10,7 +11,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "tb_categoria")
+@Table(name = "tb_categoria",uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"usuario_id", "nome"})
+})
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -18,7 +21,7 @@ import lombok.Setter;
 public class Categoria {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long Id;
+    private long id;
     @Column(nullable = false)
     @NotBlank
     private String nome;
@@ -30,4 +33,10 @@ public class Categoria {
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
+
+    public Categoria(CategoriaCadastroDto dto) {
+        this.nome=dto.nome();
+        this.tipo = dto.tipo();
+
+    }
 }
