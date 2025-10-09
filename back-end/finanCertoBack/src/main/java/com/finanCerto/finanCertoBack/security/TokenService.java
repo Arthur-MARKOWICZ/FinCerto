@@ -65,6 +65,7 @@ public class TokenService {
             verifier.verify(token);
             return true;
         } catch (JWTVerificationException e) {
+            logger.error("erro na verificacao do token do usuario: {}", getSubject(token));
             return false;
         }
     }
