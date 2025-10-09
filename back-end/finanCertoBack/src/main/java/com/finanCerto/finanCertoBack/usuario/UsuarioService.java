@@ -41,15 +41,19 @@ public class UsuarioService {
         return  usuario;
     }
     public LoginResponseDto login(LoginRequestDto dto){
+        logger.info("Tentando fazer login do usuario: {}", dto.email());
         Optional<Usuario> usuario = repository.findByEmail(dto.email());
         if(usuario.isEmpty()){
+            logger.info("usuario: {} nao foi encontrado", dto.email());
             throw  new UsuarioNaoEncontrado("email ou senha incorretos");
         }
         if(!encoder.matches(dto.senha(), usuario.get().getSenha())){
+            logger.info("a senha do usuario: {} esta incorreta",dto.email());
             throw new UsuarioNaoEncontrado("email ou senha incorretos");
         }
         String token = tokenService.generateToken(usuario.get());
         LoginResponseDto response = new LoginResponseDto(token);
+        logger.info("login do usuario: {} feito com sucesso", dto.email());
         return  response;
     }
 }
