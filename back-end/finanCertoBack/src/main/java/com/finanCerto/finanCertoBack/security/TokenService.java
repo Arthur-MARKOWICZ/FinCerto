@@ -9,6 +9,8 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.finanCerto.finanCertoBack.exception.UsuarioNaoEncontrado;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import com.finanCerto.finanCertoBack.usuario.UsuarioRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +28,7 @@ public class TokenService {
     private long jwtExpiration;
     private final UsuarioRepository usuarioRepository;
     private  Long REFRESH_TOKEN_EXPIRATION = 1000L * 60 * 60 * 24 * 7;
+    private static final Logger logger = LoggerFactory.getLogger(TokenService.class);
 
     public TokenService(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
@@ -44,6 +47,7 @@ public class TokenService {
                     .sign(algorithm);
             return token;
         }catch (JWTCreationException e){
+            logger.error("erro na geracao do token do usuario: {}", usuario.getEmail());
             throw new RuntimeException("Erro na geração do token", e);
 
         }

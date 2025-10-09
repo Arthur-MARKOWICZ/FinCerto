@@ -31,7 +31,7 @@ public class UsuarioService {
         logger.info("Tentando cadastrar o usuario: {}", dto.email());
         Usuario usuario =  new Usuario(dto);
         if(repository.existsByEmail(usuario.getEmail())){
-            logger.info("Usuario com o email: {} ja existe", dto.email());
+
             throw new UsuarioJaExiste("Usuario com este email ja existe");
         }
         String hashSenha = encoder.encode(dto.senha());
@@ -44,11 +44,10 @@ public class UsuarioService {
         logger.info("Tentando fazer login do usuario: {}", dto.email());
         Optional<Usuario> usuario = repository.findByEmail(dto.email());
         if(usuario.isEmpty()){
-            logger.info("usuario: {} nao foi encontrado", dto.email());
+
             throw  new UsuarioNaoEncontrado("email ou senha incorretos");
         }
         if(!encoder.matches(dto.senha(), usuario.get().getSenha())){
-            logger.info("a senha do usuario: {} esta incorreta",dto.email());
             throw new UsuarioNaoEncontrado("email ou senha incorretos");
         }
         String token = tokenService.generateToken(usuario.get());

@@ -25,7 +25,6 @@ public class CategoriaService {
         Usuario usuario = tokenService.obterUsuario(dto.token());
         logger.info("Recuperado o usuario pelo token: {}", usuario);
         if (repository.existsByUsuarioIdAndNome(usuario.getId(), dto.nome())){
-            logger.warn("Categoria com o mesmo nome ja criada: {}", dto.nome());
             throw  new CategoriaComMesmoNome("ja tem uma categoria com este nome");
         }
         Categoria categoria = new Categoria(dto);
