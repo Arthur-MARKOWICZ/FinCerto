@@ -80,6 +80,14 @@ public class ContaService {
         logger.info("saldo da conta : {} obtido com sucesso", id);
         return contaOptional.get().getSaldoInicial();
     }
+    public void AdicionarSaldo(double valor, Conta conta){
+        double saldo = valor + conta.getSaldoInicial();
+        conta.setSaldoInicial(saldo);
+    }
+    public void DiminuirSaldo(double valor ,Conta conta){
+        double saldo = conta.getSaldoInicial() -  valor;
+        conta.setSaldoInicial(saldo);
+    }
 
 
 }

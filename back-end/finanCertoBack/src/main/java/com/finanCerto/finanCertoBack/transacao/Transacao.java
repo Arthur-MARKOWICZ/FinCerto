@@ -2,6 +2,7 @@ package com.finanCerto.finanCertoBack.transacao;
 
 import com.finanCerto.finanCertoBack.categoria.Categoria;
 import com.finanCerto.finanCertoBack.conta.Conta;
+import com.finanCerto.finanCertoBack.transacao.dto.TransacaoCadastroDto;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -37,4 +38,15 @@ public class Transacao {
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
+
+    public Transacao(TransacaoCadastroDto dto, Usuario usuario, Categoria categoria, Conta conta) {
+        this.descricao = dto.descricao();
+        this.valor = dto.valor();
+        this.tipo = dto.tipo();
+        this.usuario = usuario;
+        this.date  = dto.data();
+        this.categoria = categoria;
+        this.conta = conta;
+
+    }
 }

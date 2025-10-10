@@ -2,6 +2,8 @@ package com.finanCerto.finanCertoBack.categoria;
 
 import com.finanCerto.finanCertoBack.categoria.dto.CategoriaCadastroDto;
 import com.finanCerto.finanCertoBack.exception.CategoriaComMesmoNome;
+import com.finanCerto.finanCertoBack.exception.CategoriaNaoEncontrada;
+import com.finanCerto.finanCertoBack.exception.ContaNaoEncontrada;
 import com.finanCerto.finanCertoBack.security.TokenService;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,14 @@ public class CategoriaService {
 
         repository.save(categoria);
         logger.info("Categoria salva no banco de dados");
+        return categoria;
+    }
+    public Categoria obterCategoriaPorNome(String nome){
+        logger.info("tentando obter a categoria de nome: {}", nome);
+        Categoria categoria = repository.findByNome(nome)
+                .orElseThrow(() -> new CategoriaNaoEncontrada("A categoria não foi encontrada"));
+
+        logger.info("categoria: {} obtida com sucesso", nome);
         return categoria;
     }
 }

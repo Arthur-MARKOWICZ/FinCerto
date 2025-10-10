@@ -39,7 +39,11 @@ public class GlobalExceptionHandler {
         logger.error("usuario nao foi encontrado: {}", ex.getMessage());
         return ConstrutorResposta(HttpStatus.NOT_FOUND, ex.getMessage());
     }
-
+    @ExceptionHandler(CategoriaNaoEncontrada.class)
+    public ResponseEntity<Object> handleCategoriaNaoEncontrada(CategoriaNaoEncontrada ex){
+        logger.error("categoria nao foi encontrada: {}",ex.getMessage());
+        return ConstrutorResposta(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
 
 
     private ResponseEntity<Object> ConstrutorResposta(HttpStatus status, String messagem){
