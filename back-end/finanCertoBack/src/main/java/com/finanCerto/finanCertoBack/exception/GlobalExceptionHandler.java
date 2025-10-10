@@ -44,6 +44,11 @@ public class GlobalExceptionHandler {
         logger.error("categoria nao foi encontrada: {}",ex.getMessage());
         return ConstrutorResposta(HttpStatus.NOT_FOUND, ex.getMessage());
     }
+    @ExceptionHandler(TransacaoNaoEncontrada.class)
+    public ResponseEntity<Object> handleTransacaoNaoEncontrada(TransacaoNaoEncontrada ex){
+        logger.error("transacao nao foi encontrada: {}",ex.getMessage());
+        return ConstrutorResposta(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
 
 
     private ResponseEntity<Object> ConstrutorResposta(HttpStatus status, String messagem){

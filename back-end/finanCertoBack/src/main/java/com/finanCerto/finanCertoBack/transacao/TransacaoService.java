@@ -5,12 +5,15 @@ import com.finanCerto.finanCertoBack.categoria.CategoriaService;
 import com.finanCerto.finanCertoBack.conta.Conta;
 import com.finanCerto.finanCertoBack.conta.ContaService;
 import com.finanCerto.finanCertoBack.conta.dtos.ContaObterPorNome;
+import com.finanCerto.finanCertoBack.exception.TransacaoNaoEncontrada;
 import com.finanCerto.finanCertoBack.security.TokenService;
 import com.finanCerto.finanCertoBack.transacao.dto.TransacaoCadastroDto;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class TransacaoService {
@@ -40,7 +43,16 @@ public class TransacaoService {
             contaService.AdicionarSaldo(transacao.getValor(), transacao.getConta());
         }
         repository.save(transacao);
-        logger.info("sala a transacao de descricao: {}",dto.descricao());
+        logger.info("salva a transacao de descricao: {}",dto.descricao());
         return transacao;
+    }
+    public Transacao obterPorId (Long id){
+        logger.info("Tentando obter transacao de id : {}", id);
+        Optional<Transacao> transacaoOptional  = repository.findById(id);
+        if(transacaoOptional.isEmpty()){
+            throw  new TransacaoNaoEncontrada("A transacao nao foi encontrada");
+        }
+        logger.info("transacao de id : {} obtida com sucesso", id);
+        return transacaoOptional.get();
     }
 }
