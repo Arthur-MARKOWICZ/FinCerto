@@ -24,7 +24,7 @@ Criar uma base sólida para futuras implementações de transações e relatóri
 
 ## ⚙️ Tecnologias Utilizadas
 Categoria	Tecnologias
-Linguagem	Java 17+
+Linguagem	Java 21
 Framework	Spring Boot
 Banco de Dados	PostgreSQL (via Docker Compose)
 ORM	Hibernate / JPA
@@ -53,6 +53,8 @@ Logs	SLF4J + Logback
  Consulta de saldo da conta
 
  Cadastro de categoria
+
+ Cadastro de transação
 
 ## 🚧 Funcionalidades em Desenvolvimento
 
