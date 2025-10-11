@@ -4,7 +4,6 @@ import com.finanCerto.finanCertoBack.categoria.Categoria;
 import com.finanCerto.finanCertoBack.categoria.CategoriaService;
 import com.finanCerto.finanCertoBack.conta.Conta;
 import com.finanCerto.finanCertoBack.conta.ContaService;
-import com.finanCerto.finanCertoBack.conta.dtos.ContaObterPorNome;
 import com.finanCerto.finanCertoBack.exception.TransacaoNaoEncontrada;
 import com.finanCerto.finanCertoBack.security.TokenService;
 import com.finanCerto.finanCertoBack.transacao.dto.TransacaoCadastroDto;
@@ -32,8 +31,7 @@ public class TransacaoService {
     public Transacao cadastro(TransacaoCadastroDto dto){
         logger.info("Tentando cadastrar transacao: {}",dto.descricao());
         Usuario usuario = tokenService.obterUsuario(dto.token());
-        ContaObterPorNome contaObterPorNome = new ContaObterPorNome(dto.token(), dto.nomeConta());
-        Conta conta = contaService.obterContaPorNome(contaObterPorNome);
+        Conta conta = contaService.obterContaPorNome(dto.nomeConta(), dto.token());
         Categoria categoria = categoriaService.obterCategoriaPorNome(dto.nomeCategoria());
         Transacao transacao = new Transacao(dto,usuario,categoria,conta);
         if(transacao.getTipo() == Tipos.DESPESA){

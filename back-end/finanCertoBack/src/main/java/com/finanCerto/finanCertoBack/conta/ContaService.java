@@ -1,10 +1,8 @@
 package com.finanCerto.finanCertoBack.conta;
 
 import com.finanCerto.finanCertoBack.conta.dtos.ContaCadastroDto;
-import com.finanCerto.finanCertoBack.conta.dtos.ContaObterPorNome;
 import com.finanCerto.finanCertoBack.exception.ContaComOMesmoNome;
 import com.finanCerto.finanCertoBack.exception.ContaNaoEncontrada;
-import com.finanCerto.finanCertoBack.exception.UsuarioNaoEncontrado;
 import com.finanCerto.finanCertoBack.security.TokenService;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import com.finanCerto.finanCertoBack.usuario.UsuarioRepository;
@@ -39,14 +37,14 @@ public class ContaService {
         logger.info("Conta: {} cadastrada com sucesso", dto.nome());
         return  conta;
     }
-    public Conta obterContaPorNome(ContaObterPorNome dto){
-        logger.info("tentando obter conta com o nome: {}", dto.nome());
-        Usuario usuario = tokenService.obterUsuario(dto.token());
-        Optional<Conta> contaOptional = repository.findByNameAndUsuarioID(usuario.getId(), dto.nome());
+    public Conta obterContaPorNome( String nome,String token){
+        logger.info("tentando obter conta com o nome: {}",nome);
+        Usuario usuario = tokenService.obterUsuario(token.replace("Bearer ", ""));
+        Optional<Conta> contaOptional = repository.findByNameAndUsuarioID(usuario.getId(), nome);
         if(contaOptional.isEmpty()){
             throw new ContaNaoEncontrada("Conta nao foi encontrada");
         }
-        logger.info("Conta do nome : {} obtida com sucesso", dto.nome());
+        logger.info("Conta do nome : {} obtida com sucesso", nome);
         return contaOptional.get();
     }
     public Page<Conta> pegarTodosPorUsuarioId(String token, Pageable pageable){

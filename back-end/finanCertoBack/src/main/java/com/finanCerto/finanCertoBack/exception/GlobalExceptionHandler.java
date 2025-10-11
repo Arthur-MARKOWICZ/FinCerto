@@ -49,6 +49,16 @@ public class GlobalExceptionHandler {
         logger.error("transacao nao foi encontrada: {}",ex.getMessage());
         return ConstrutorResposta(HttpStatus.NOT_FOUND, ex.getMessage());
     }
+    @ExceptionHandler(OrcamentoComMesmoNome.class)
+    public ResponseEntity<Object> handleOrcamentoComMesmoNome(OrcamentoComMesmoNome ex){
+        logger.error("Ja existe um orcamento com este nome: {}",ex.getMessage());
+        return ConstrutorResposta(HttpStatus.CONFLICT, ex.getMessage());
+    }
+    @ExceptionHandler(OrcamentoNaoEncontrado.class)
+    public ResponseEntity<Object> handleOrcamentoNaoEncontrado(OrcamentoNaoEncontrado ex){
+        logger.error("Orcamento nao foi encontrado: {}",ex.getMessage());
+        return ConstrutorResposta(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
 
 
     private ResponseEntity<Object> ConstrutorResposta(HttpStatus status, String messagem){

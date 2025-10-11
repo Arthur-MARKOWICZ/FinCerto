@@ -1,7 +1,6 @@
 package com.finanCerto.finanCertoBack.conta;
 
 import com.finanCerto.finanCertoBack.conta.dtos.ContaCadastroDto;
-import com.finanCerto.finanCertoBack.conta.dtos.ContaObterPorNome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.core.annotations.ParameterObject;
@@ -26,11 +25,12 @@ public class ContaController {
         logger.info("conta: {} cadastrada com sucesso", dto.nome());
         return ResponseEntity.status(HttpStatus.CREATED).body(conta);
     }
-    @PostMapping("obterPorNome")
-    public ResponseEntity<Conta> obterPorNome(@RequestBody ContaObterPorNome dto){
-        logger.info("Recebendo requisicao de obter conta por nome da conta: {}",dto.nome());
-        Conta conta = service.obterContaPorNome(dto);
-        logger.info("Conta: {} obtida com sucesso",dto.nome());
+    @GetMapping("/nome/{nome}")
+    public ResponseEntity<Conta> obterPorNome(@PathVariable  String nome,
+                                              @RequestHeader("Authorization") String token){
+        logger.info("Recebendo requisicao de obter conta por nome da conta: {}",nome);
+        Conta conta = service.obterContaPorNome(nome,token);
+        logger.info("Conta: {} obtida com sucesso",nome);
         return ResponseEntity.ok(conta);
     }
     @GetMapping("/obterPorUsuario/{token}")
