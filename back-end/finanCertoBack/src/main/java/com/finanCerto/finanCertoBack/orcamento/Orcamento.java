@@ -13,7 +13,8 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "tb_orcamento",uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"usuario_id", "nome"})
+        @UniqueConstraint(columnNames = {"usuario_id", "nome"}),
+        @UniqueConstraint(columnNames = {"categoria_id", "nome"})
 })
 @Getter
 @Setter
@@ -24,6 +25,7 @@ public class Orcamento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     private double valorLimite;
+    private double valorAtual;
     private String nome;
     private LocalDate prazo;
     @ManyToOne
@@ -36,6 +38,7 @@ public class Orcamento {
     public Orcamento(OrcamentoCadastroDto dto, Categoria categoria, Usuario usuario) {
         this.valorLimite =dto.valorLimite();
         this.nome = dto.nome();
+        this.valorAtual = dto.valorInical();
         this.prazo = dto.prazo();
         this.categoria =categoria;
         this.usuario =usuario;

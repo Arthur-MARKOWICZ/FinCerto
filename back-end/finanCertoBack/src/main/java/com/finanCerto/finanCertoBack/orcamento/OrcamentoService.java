@@ -35,11 +35,31 @@ public class OrcamentoService {
         return orcamento;
     }
     public Orcamento obterPorNome(String nome,String token){
+        logger.info("tetando recuperar o orcamento de nome: {}" ,nome);
         Usuario usuario = tokenService.obterUsuario(token.replace("Bearer ", ""));
         Orcamento orcamento = repository.findByUsuarioIdAndNome( usuario.getId(), nome);
         if(orcamento == null){
             throw new OrcamentoNaoEncontrado("O orcamento nao foi encontrado");
         }
+        logger.info("orcemento recuperado com sucesso");
         return orcamento;
+    }
+    public Orcamento obterPorCategoria(Categoria categoria){
+        logger.info("tetando recuperar o orcamento de categoria: {}" ,categoria.getNome());
+        Orcamento orcamento = repository.findByCategoria(categoria);
+        if(orcamento == null){
+            throw new OrcamentoNaoEncontrado("o orcamento nao foi encontrado");
+
+        }
+        logger.info("orcemento recuperado com sucesso");
+        return orcamento;
+    }
+    public void adicionar(double valor,Categoria categoria){
+        logger.info("tetando adicionar ao orcamento de categoria: {}" ,categoria.getNome());
+        Orcamento orcamento = obterPorCategoria(categoria);
+        var valorInical = orcamento.getValorAtual();
+        var novoValor = valorInical+ valor;
+        orcamento.setValorAtual(novoValor);
+        logger.info("valor adicionado com sucesso ao orcamento: {}", orcamento.getNome());
     }
 }

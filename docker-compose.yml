@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: postgresql_FinanCerto_deploy
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: finanCerto
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./banco_de_dados/postgres-data:/var/lib/postgresql/data
+    networks:
+      - financerto-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  financerto-app:
+    build: 
+       context: ./back-end/finanCertoBack
+       dockerfile: DockerFile
+    container_name: financerto-app
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/finanCerto
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: ${JWT_SECRET}
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: -1
+    ports:
+      - "8080:8080"
+    networks:
+      - financerto-net
+
+networks:
+  financerto-net:

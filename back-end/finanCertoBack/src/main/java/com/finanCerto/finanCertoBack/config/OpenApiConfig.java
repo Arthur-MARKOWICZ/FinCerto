@@ -15,7 +15,8 @@ public class OpenApiConfig {
         final String securitySchemeName = "bearerAuth";
 
         return new OpenAPI()
-                .info(new Info().title("FinanCerto api").version("v1"))
+                .info(new Info().title("FinanCerto api").version("v1")
+                            .description("API de gerenciamento financeiro pessoal - Projeto de Estudo"))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,
