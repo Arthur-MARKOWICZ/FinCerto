@@ -1,0 +1,27 @@
+# Ambiente virtual
+venv/
+.env
+
+# Arquivos temporários
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs
+*.log
+
+# Configurações do editor
+.idea/
+.vscode/
+
+# Dados temporários do sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de cache do FastAPI/uvicorn
+*.sqlite3
+*.db
+
+# Relatórios e exportações locais
+/reports/
