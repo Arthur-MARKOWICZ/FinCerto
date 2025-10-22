@@ -1,15 +1,11 @@
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).resolve().parent.parent))
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from app.database import get_db
-import sys
+from .database import get_db
+from .report_controller import router as relatorio_router
 
-
-app = FastAPI()
+app = FastAPI(title="FinanCerto Reports API")
+app.include_router(relatorio_router, prefix="/api", tags=["Relatórios"])
 
 @app.get("/")
 def home():

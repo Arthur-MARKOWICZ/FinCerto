@@ -1,7 +1,7 @@
 # Ambiente virtual
 venv/
 .env
-
+modelo banco de dados.txt
 # Arquivos temporários
 __pycache__/
 *.pyc
