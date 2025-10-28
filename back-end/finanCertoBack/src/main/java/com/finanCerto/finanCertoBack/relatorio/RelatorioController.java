@@ -1,0 +1,56 @@
+package com.finanCerto.finanCertoBack.relatorio;
+
+import com.finanCerto.finanCertoBack.categoria.Tipo;
+import com.finanCerto.finanCertoBack.relatorio.dto.RelatorioPorCategoria;
+import com.finanCerto.finanCertoBack.security.TokenService;
+import com.finanCerto.finanCertoBack.usuario.Usuario;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+@RestController
+@RequestMapping("/api/relatorios")
+public class RelatorioController {
+    private final RestTemplate restTemplate = new RestTemplate();
+    private  final TokenService tokenService;
+
+    public RelatorioController(TokenService tokenService) {
+        this.tokenService = tokenService;
+    }
+
+    @GetMapping("/relatorioPorCategoria")
+    public ResponseEntity<byte[]> gerarRelatorioCustomizado(
+            @RequestParam String formato,
+            @RequestParam Tipo tipo,
+            @RequestHeader("Authorization") String token) {
+
+        Usuario usuario = tokenService.obterUsuario(token.replace("Bearer ", ""));
+
+        // Corrige os parâmetros da URL — o correto é usar "&" entre eles
+        String url = String.format(
+                "http://localhost:8000/api/relatorioPorCategoria?usuario_id=%s&tipo=%s&formato=%s",
+                usuario.getId(), tipo, formato);
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        // Faz a requisição GET e recebe o arquivo como byte[]
+        ResponseEntity<byte[]> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                byte[].class
+        );
+
+        // Pega o tipo de conteúdo retornado pelo FastAPI (ex: application/pdf)
+        MediaType contentType = response.getHeaders().getContentType();
+
+        // Retorna o arquivo diretamente para o cliente
+        return ResponseEntity.ok()
+                .contentType(contentType != null ? contentType : MediaType.APPLICATION_OCTET_STREAM)
+                .header("Content-Disposition", "attachment; filename=relatorio." + formato)
+                .body(response.getBody());
+    }
+
+}
