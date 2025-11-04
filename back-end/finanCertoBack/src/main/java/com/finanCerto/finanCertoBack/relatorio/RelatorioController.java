@@ -52,11 +52,33 @@ public class RelatorioController {
     }
     @GetMapping("/relatorioSaldoMensal")
     public ResponseEntity<byte[]> gerarRelatorioSaldoMensal(@RequestParam String formato,
-
                                                             @RequestHeader("Authorization") String token){
         Usuario usuario = tokenService.obterUsuario(token.replace("Bearer ", ""));
         String url = String.format(
                 "http://localhost:8000/api/relatorioSaldoMensal?usuario_id=%s&formato=%s",
+                usuario.getId(), formato);
+        ResponseEntity<byte[]> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                byte[].class
+        );
+
+
+        MediaType contentType = response.getHeaders().getContentType();
+
+
+        return ResponseEntity.ok()
+                .contentType(contentType != null ? contentType : MediaType.APPLICATION_OCTET_STREAM)
+                .header("Content-Disposition", "attachment; filename=relatorio." + formato)
+                .body(response.getBody());
+    }
+    @GetMapping("/relatorioTransacaoDetalhado")
+    public ResponseEntity<byte[]> gerarRelatoriosTransacaoDetalhado(@RequestParam String formato,
+                                                                    @RequestHeader("Authorization") String token){
+        Usuario usuario = tokenService.obterUsuario(token.replace("Bearer ", ""));
+        String url = String.format(
+                "http://localhost:8000/api/relatorioTransacaoDetalhado?usuario_id=%s&formato=%s",
                 usuario.getId(), formato);
         ResponseEntity<byte[]> response = restTemplate.exchange(
                 url,
