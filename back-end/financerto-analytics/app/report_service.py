@@ -129,9 +129,10 @@ class PDFGenerator(ReportGenerator):
         current_y = self._draw_header(pdf, width, height)
         current_y = self._draw_table_headers(pdf, current_y)
         
-     
         pdf.line(self.margin, current_y, width - self.margin, current_y)
         current_y -= 15
+        
+        # Configuração da fonte
         try:
             pdf.setFont("Helvetica", 9)
         except:
@@ -151,18 +152,27 @@ class PDFGenerator(ReportGenerator):
             
             x = self.margin
             for col in self.columns:
-                value = getattr(row, col['field'], '')
+                # Obtém o valor do dicionário ou do atributo do objeto
+                if isinstance(row, dict):
+                    value = row.get(col['field'], '')
+                else:
+                    value = getattr(row, col['field'], '')
+                
+                # Formata o valor conforme necessário
                 if isinstance(value, datetime):
                     value = value.strftime('%d/%m/%Y')
                 elif isinstance(value, (int, float)) and col.get('format') == 'currency':
                     value = f"R$ {value:,.2f}".replace('.', '|').replace(',', '.').replace('|', ',')
                 
+                # Desenha o texto na posição correta
                 if col.get('multiline'):
                     text = pdf.beginText(x, current_y)
                     text.textLine(str(value)[:25])
                     pdf.drawText(text)
                 else:
-                    pdf.drawString(x + 2, current_y - 10, str(value)[:20])
+                    # Ajusta a posição Y para centralizar verticalmente o texto na célula
+                    text_y = current_y - 10
+                    pdf.drawString(x + 2, text_y, str(value)[:30])  # Aumentei o limite de caracteres para 30
                 
                 x += col.get('width', 100)
             
