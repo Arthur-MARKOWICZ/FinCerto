@@ -13,6 +13,7 @@ services:
       - "5432:5432"
     volumes:
       - ./banco_de_dados/postgres-data:/var/lib/postgresql/data
+      - ./banco_de_dados/init-readonly.sql:/docker-entrypoint-initdb.d/init-readonly.sql
     networks:
       - financerto-net
     healthcheck:
