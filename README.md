@@ -1,141 +1,151 @@
-# FinanCerto — Sistema de Controle Financeiro Pessoal
+# 💰 FinanCerto — Sistema de Controle Financeiro Pessoal
 
- Projeto desenvolvido com o objetivo de estudo e aprimoramento profissional, aplicando conceitos de Java, Spring Boot, autenticação JWT, segurança e boas práticas de arquitetura.
-Criado para demonstrar domínio de back-end em um cenário real de API financeira moderna.
+![Java](https://img.shields.io/badge/Java-21-red?logo=java)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-brightgreen?logo=springboot)
+![Python](https://img.shields.io/badge/Python-3.13-yellow?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green?logo=fastapi)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?logo=postgresql)
+![Docker](https://img.shields.io/badge/Docker-Compose-blue?logo=docker)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-## Descrição do Projeto
+> API REST desenvolvida em **Java + Spring Boot** para gerenciamento financeiro pessoal, com **autenticação JWT**, **boas práticas de arquitetura**, **integração Docker + PostgreSQL**, e **módulo de relatórios em Python (FastAPI)**.  
+>  
+> Criado como projeto de estudo e portfólio, o **FinanCerto** simula um ambiente de **API financeira profissional**, com segurança, modularidade e escalabilidade.
 
-O FinanCerto é uma API REST voltada para o gerenciamento financeiro pessoal, permitindo que o usuário cadastre suas contas e categorias de despesas/receitas, além de autenticar-se com segurança via JWT.
+---
 
-O projeto simula um ambiente profissional, com autenticação, validações, logs e arquitetura em camadas, pronto para evoluir com novas funcionalidades como relatórios e controle de transações.
-## Objetivos do Projeto
+## 🧩 Visão Geral
 
-Consolidar conhecimentos em Java + Spring Boot
+O **FinanCerto** é uma aplicação back-end que permite o controle financeiro pessoal por meio do cadastro de **usuários, contas, categorias e transações**.  
+O sistema utiliza **autenticação JWT** para garantir segurança e isolar dados por usuário, aplicando padrões sólidos de desenvolvimento **(Controller → Service → Repository)**.
 
-Aplicar boas práticas de arquitetura em camadas (Controller, Service, Repository)
+A arquitetura foi planejada para ser **modular e extensível**, permitindo a inclusão de novos serviços, como **relatórios financeiros, orçamentos e dashboards analíticos**.  
+O módulo de **relatórios** foi desenvolvido em **Python (FastAPI)**, comunicando-se com o core em **Spring Boot**.
 
-Implementar autenticação JWT com Spring Security
+---
 
-Praticar persistência de dados com JPA/Hibernate
+## 🎯 Objetivos do Projeto
 
-Utilizar Docker Compose para orquestrar banco de dados PostgreSQL
+- Consolidar conhecimentos em **Java + Spring Boot**
+- Aplicar **boas práticas de arquitetura em camadas**
+- Implementar **autenticação JWT com Spring Security**
+- Praticar **persistência de dados** com **JPA/Hibernate**
+- Utilizar **Docker Compose** para orquestração do PostgreSQL
+- Criar uma base sólida para **módulos de transações e relatórios**
+- Integrar **serviços entre Java e Python (FastAPI)** de forma desacoplada
 
-Criar uma base sólida para futuras implementações de transações e relatórios financeiros
+---
 
 ## ⚙️ Tecnologias Utilizadas
-Categoria	Tecnologias
-Linguagem	Java 21
-Framework	Spring Boot
-Banco de Dados	PostgreSQL (via Docker Compose)
-ORM	Hibernate / JPA
-Segurança	Spring Security + JWT
-Documentação	Swagger / Springdoc OpenAPI
-Build Tool	Maven
-Logs	SLF4J + Logback
 
+| Categoria | Tecnologias |
+|------------|-------------|
+| **Linguagem** | Java 21, Python 3.13 |
+| **Frameworks** | Spring Boot, FastAPI |
+| **Banco de Dados** | PostgreSQL (via Docker Compose) |
+| **ORM** | Hibernate / JPA |
+| **Segurança** | Spring Security + JWT |
+| **Documentação** | Swagger / Springdoc OpenAPI |
+| **Build Tool** | Maven |
+| **Logs** | SLF4J + Logback |
+| **Infraestrutura** | Docker e Docker Compose |
+
+---
 
 ## ✅ Funcionalidades Implementadas
 
- Cadastro de usuário
+- 👤 **Cadastro e autenticação de usuários (JWT)**
+- 💳 **Cadastro e listagem de contas financeiras**
+- 🔍 **Busca de conta por nome (único por usuário)**
+- 💰 **Consulta e atualização de saldo**
+- 🧾 **Cadastro de categorias**
+- 💸 **Cadastro de transações**
+- 🔐 **Configuração completa de segurança (Spring Security + Token Service)**
+- 📊 **Geração de relatórios financeiros personalizados (módulo FastAPI)**
+- ☁️ **Deploy em nuvem (Oracle Cloud)**  
 
- Login com autenticação JWT
+---
 
- Configuração de segurança (Spring Security + Token Service)
+## 🚧 Em Desenvolvimento
 
- Cadastro de conta financeira
+- 💵 **Controle completo de receitas e despesas**  
+- 📅 **Módulo de orçamento mensal**  
+- 🧪 **Testes automatizados (JUnit + Mockito)**  
 
- Obtenção de conta por nome (único por usuário)
+💡 *O projeto está em constante evolução, refletindo o processo de aprendizado contínuo em desenvolvimento back-end profissional.*
 
- Listagem de todas as contas por ID de usuário
+---
 
- Atualização de conta
+## 🧠 Conceitos e Boas Práticas Aplicadas
 
- Consulta de saldo da conta
+- Autenticação e autorização via **JWT**
+- Padrão **DTO** e **validação de dados**
+- **Injeção de dependência** e **Inversão de Controle (IoC)**
+- Arquitetura **modular e desacoplada**
+- **Logs estruturados** com SLF4J + Logback
+- Uso de **Docker Compose** para infraestrutura local
+- **Boas práticas de Clean Code** e **organização por camadas**
+- **Comunicação entre serviços** (Spring Boot ↔️ FastAPI)
 
- Cadastro de categoria
+---
 
- Cadastro de transação
+## ▶️ Como Executar o Projeto
 
-## 🚧 Funcionalidades em Desenvolvimento
-
- Relatórios financeiros
-
- Controle completo de transações (receitas e despesas)
-
- Módulo de orçamento mensal
-
- Testes automatizados (JUnit + Mockito)
-
- Deploy na nuvem (Render / Railway / AWS)
-
-💡 O projeto está em constante evolução, refletindo o processo de aprendizado e aprimoramento contínuo em desenvolvimento back-end profissional.
-
-## 🧾 Como Executar o Projeto
 ### 🔧 Pré-requisitos
 
-Java 21
+- Java 21  
+- Maven  
+- Python 3.13  
+- Docker e Docker Compose
 
-Maven
+---
 
-Docker e Docker Compose
+### 🧭 Passos
 
-### ▶️ Passos para rodar
-
-Clone o repositório:
-``` bash
+```bash
+# 1. Clonar o repositório
 git clone https://github.com/seuusuario/financerto.git
-```
 
-Acesse o diretório:
-``` bash
+# 2. Acessar o diretório
 cd financerto
-```
 
-Suba o banco de dados com Docker Compose:
-``` bash
+# 3. Subir o banco de dados com Docker
 docker-compose up -d
-```
 
-Execute o projeto:
-``` bash
+# 4. Executar o back-end Java
 mvn spring-boot:run
+
+# 5. (Opcional) Executar o módulo de relatórios em Python
+cd financerto-analytics
+uvicorn app.main:app --reload --port 8000
 ```
+## 🌐 Acessar Documentação (Swagger)
 
-Acesse o Swagger:
+👉 [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
-http://localhost:8080/swagger-ui/index.html
-
-## 🧠 Conceitos Aplicados
-
-Autenticação JWT e segurança de endpoints
-
-Padrão DTO e validação de dados
-
-Injeção de dependência e inversão de controle
-
-Organização modular em camadas
-
-Boas práticas de código limpo e reutilizável
-
-Uso de Docker Compose para infraestrutura
+---
 
 ## 👨‍💻 Autor
 
-Arthur Markowicz Lopes
-💼 Desenvolvedor Back-End em formação
+**Arthur Markowicz Lopes**  
+💼 Desenvolvedor Back-End em formação  
+📚 Foco em **Java**, **Spring Boot** e **Arquitetura de Sistemas**
 
-📚 Foco em Java, Spring Boot e Arquitetura de Sistemas
+🔗 [**LinkedIn**](https://www.linkedin.com/in/arthur-markowicz-lopes/)  
+💻 [**GitHub**](https://github.com/arthurmarkowiczlopes)
 
-🔗 [LinkedIn](https://www.linkedin.com/in/arthur-markowicz-lopes)
-
-💻 [GitHub](https://github.com/Arthur-MARKOWICZ)
+---
 
 ## 🪄 Considerações Finais
 
-O FinanCerto é um projeto pessoal criado para aprimorar habilidades técnicas e demonstrar conhecimento em tecnologias amplamente utilizadas no mercado.
-Mesmo sendo um projeto de estudo, ele segue padrões profissionais de código e arquitetura, servindo como portfólio prático para oportunidades na área de desenvolvimento back-end.
+O **FinanCerto** é mais do que um projeto de estudo — é um **laboratório de boas práticas em desenvolvimento back-end**.  
+Cada módulo representa uma etapa de aprendizado em **arquitetura limpa**, **segurança**, **integração** e **escalabilidade**.
 
-## 💬 Licença
+🚀 Mesmo em constante evolução, o projeto já reflete **padrões profissionais** e serve como **portfólio prático** para oportunidades na área de **desenvolvimento back-end**.
 
-Este projeto é de uso livre para fins educacionais.
-Sinta-se à vontade para clonar, estudar e contribuir com melhorias!
+---
+
+## 🧾 Licença
+
+Este projeto é de **uso livre para fins educacionais**.  
+Sinta-se à vontade para **clonar**, **estudar** e **contribuir** com melhorias!
