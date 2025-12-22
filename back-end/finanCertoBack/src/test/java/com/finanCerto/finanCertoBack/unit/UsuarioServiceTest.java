@@ -88,8 +88,8 @@ public class UsuarioServiceTest {
         verify(repository, never()).save(any(Usuario.class));
     }
     @Test
-    @DisplayName("Deve fazer login com a senha errada")
-    void deveFazerLoginComSenhaErrada() {
+    @DisplayName("Deve impedir de fazer login com a senha errada")
+    void deveImpedirLoginComSenhaErrada() {
         // Arrange
         String email = "test@test.com";
         String senha = "test";
