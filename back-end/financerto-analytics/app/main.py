@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from .database import get_db
-from .report_controller import router as relatorio_router
+from app.database import get_db
+from app.report_controller import router as relatorio_router
 
 app = FastAPI(title="FinanCerto Reports API")
 app.include_router(relatorio_router, prefix="/api", tags=["Relatórios"])

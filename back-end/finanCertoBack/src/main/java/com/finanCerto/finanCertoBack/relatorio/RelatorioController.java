@@ -5,6 +5,8 @@ import com.finanCerto.finanCertoBack.relatorio.dto.RelatorioPorCategoria;
 import com.finanCerto.finanCertoBack.security.TokenService;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -15,6 +17,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class RelatorioController {
     private final RestTemplate restTemplate = new RestTemplate();
     private  final TokenService tokenService;
+    @Value("${fastapi.base-url}")
+    private String fastApiBaseUrl;
 
     public RelatorioController(TokenService tokenService) {
         this.tokenService = tokenService;
@@ -28,8 +32,8 @@ public class RelatorioController {
 
         Usuario usuario = tokenService.obterUsuario(token.replace("Bearer ", ""));
         String url = String.format(
-                "http://localhost:8000/api/relatorioPorCategoria?usuario_id=%s&tipo=%s&formato=%s",
-                usuario.getId(), tipo, formato);
+                "%s/relatorioPorCategoria?usuario_id=%s&tipo=%s&formato=%s",
+                fastApiBaseUrl,usuario.getId(), tipo, formato);
 
 
 
@@ -55,8 +59,8 @@ public class RelatorioController {
                                                             @RequestHeader("Authorization") String token){
         Usuario usuario = tokenService.obterUsuario(token.replace("Bearer ", ""));
         String url = String.format(
-                "http://localhost:8000/api/relatorioSaldoMensal?usuario_id=%s&formato=%s",
-                usuario.getId(), formato);
+                "%srelatorioSaldoMensal?usuario_id=%s&formato=%s",
+                fastApiBaseUrl,usuario.getId(), formato);
         ResponseEntity<byte[]> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
@@ -78,8 +82,8 @@ public class RelatorioController {
                                                                     @RequestHeader("Authorization") String token){
         Usuario usuario = tokenService.obterUsuario(token.replace("Bearer ", ""));
         String url = String.format(
-                "http://localhost:8000/api/relatorioTransacaoDetalhado?usuario_id=%s&formato=%s",
-                usuario.getId(), formato);
+                "%s/relatorioTransacaoDetalhado?usuario_id=%s&formato=%s",
+                fastApiBaseUrl,usuario.getId(), formato);
         ResponseEntity<byte[]> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,

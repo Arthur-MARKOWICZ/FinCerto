@@ -9,6 +9,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: finanCerto
+      FASTAPI_BASE_URL: http://financerto-fastapi:8001/api
     ports:
       - "5432:5432"
     volumes:
@@ -41,6 +42,21 @@ services:
       SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: -1
     ports:
       - "8080:8080"
+    networks:
+      - financerto-net
+  financerto-fastapi:
+    build:
+      context: ./back-end/financerto-analytics
+      dockerfile: Dockerfile
+    container_name: financerto-fastapi
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://readonly_user:readonly_password@postgres:5432/finanCerto
+    ports:
+      - "8001:8001"
     networks:
       - financerto-net
 

@@ -12,6 +12,7 @@ public class FinanCertoBackApplication {
         System.setProperty("DB_USERNAME", dotenv.get("DB_USERNAME"));
         System.setProperty("DB_PASSWORD", dotenv.get("DB_PASSWORD"));
         System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
+        System.setProperty("FAST_API_URL", dotenv.get("FASTAPI_BASE_URL"));
 		SpringApplication.run(FinanCertoBackApplication.class, args);
 	}
 
