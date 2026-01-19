@@ -9,6 +9,7 @@ import com.finanCerto.finanCertoBack.security.TokenService;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import com.finanCerto.finanCertoBack.usuario.UsuarioService;
 import com.finanCerto.finanCertoBack.usuario.dtos.UsuarioCadastroDto;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +33,18 @@ public class ContaServiceTest {
     private ContaRepository contaRepository;
     @Mock
     private TokenService tokenService;
+    @BeforeEach
+    void setup(){
+
+        UsuarioCadastroDto usuarioCadastroDto = new UsuarioCadastroDto("setup","setup@test.com",
+                "test");
+        Usuario usuario = new Usuario(usuarioCadastroDto);
+        ContaCadastroDto contaCadastroDto = new ContaCadastroDto("setup",CORRENTE,100.00, "ftestToken");
+        Conta conta = new Conta(contaCadastroDto,usuario);
+        when(tokenService.obterUsuario("ftestToken")).thenReturn(usuario);
+        when(contaRepository.save(any(Conta.class))).thenReturn(conta);
+        Conta contaCadastrada = contaService.cadastro(contaCadastroDto);
+    }
     @Test
     @DisplayName("Deve criar um conta")
     void DeveCriarConta(){
@@ -49,7 +62,7 @@ public class ContaServiceTest {
     }
     @Test
     @DisplayName("Deve impedir de criar conta com o mesmo nome")
-    void ImpedirCOntaComMesmoNome(){
+    void ImpedirContaComMesmoNome(){
         UsuarioCadastroDto usuarioCadastroDto = new UsuarioCadastroDto("test","test@test.com",
                 "test");
         Usuario usuario = new Usuario(usuarioCadastroDto);
@@ -63,5 +76,10 @@ public class ContaServiceTest {
         assertThrows(ContaComOMesmoNome.class, () -> {
             contaService.cadastro(contaCadastroDto2);
         });
+    }
+    @Test
+    @DisplayName("Deve obter conta por nome")
+    void obterContaPeloNome(){
+        Conta conta = contaService.obterContaPorNome("setup","ftestToken");
     }
 }
