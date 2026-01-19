@@ -1,6 +1,7 @@
 from sqlalchemy.sql import text, func
-from datetime import datetime
-from typing import List, Dict, Any
+from sqlalchemy.orm import Session
+from datetime import datetime, date
+from typing import List, Dict, Any, Optional
 
 class ReportRepository:
     def __init__(self, db: Session):

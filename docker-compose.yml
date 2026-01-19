@@ -9,14 +9,15 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: finanCerto
-      FASTAPI_BASE_URL: http://financerto-fastapi:8001/api
     ports:
       - "5432:5432"
     volumes:
       - ./banco_de_dados/postgres-data:/var/lib/postgresql/data
       - ./banco_de_dados/init-readonly.sql:/docker-entrypoint-initdb.d/init-readonly.sql
     networks:
-      - financerto-net
+      financerto-net:
+        aliases:
+          - postgres
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
       interval: 5s
@@ -33,13 +34,15 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/finanCerto
+      # Usar o container_name do Postgres (estável) para evitar falhas de DNS do alias "postgres"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql_FinanCerto_deploy:5432/finanCerto
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       JWT_SECRET: ${JWT_SECRET}
       SERVER_PORT: 8080
       SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: -1
+      FASTAPI_BASE_URL: http://financerto-fastapi:8001/api
     ports:
       - "8080:8080"
     networks:
@@ -54,7 +57,8 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://readonly_user:readonly_password@postgres:5432/finanCerto
+      # Usa o container_name do Postgres para garantir resolução de host dentro da rede
+      DATABASE_URL: postgres://${DB_USERNAME}:${DB_PASSWORD}@postgresql_FinanCerto_deploy:5432/finanCerto
     ports:
       - "8001:8001"
     networks:
