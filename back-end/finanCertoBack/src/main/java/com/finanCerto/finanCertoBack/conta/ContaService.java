@@ -30,6 +30,7 @@ public class ContaService {
         logger.info("tentando cadastrar conta: {}",dto.nome());
        Usuario usuario = tokenService.obterUsuario(dto.token());
         if(repository.existsByUsuarioIdAndNome(usuario.getId(), dto.nome())){
+            logger.info("Conta ja existente com este nome: {}",dto.nome());
             throw  new ContaComOMesmoNome("ja existe uma conta com este nome");
         }
         Conta conta = new Conta(dto,usuario);
