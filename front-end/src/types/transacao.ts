@@ -5,7 +5,7 @@ export enum TransacaoTipos {
 
 export interface TransacaoCadastroDto {
   valor: number;
-  data: string; // Formato ISO string para LocalDateTime do back-end
+  data: string; 
   descricao: string;
   tipo: TransacaoTipos;
   nomeConta: string;

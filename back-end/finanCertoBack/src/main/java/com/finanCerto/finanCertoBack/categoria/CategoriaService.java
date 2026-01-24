@@ -3,18 +3,15 @@ package com.finanCerto.finanCertoBack.categoria;
 import com.finanCerto.finanCertoBack.categoria.dto.CategoriaCadastroDto;
 import com.finanCerto.finanCertoBack.exception.CategoriaComMesmoNome;
 import com.finanCerto.finanCertoBack.exception.CategoriaNaoEncontrada;
-import com.finanCerto.finanCertoBack.exception.ContaNaoEncontrada;
 import com.finanCerto.finanCertoBack.security.TokenService;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
@@ -36,14 +33,12 @@ public class CategoriaService {
         return categorias;
     }
     
-    public List<Categoria> listarPorUsuario( String token){
-        Usuario usuario = tokenService.obterUsuario(token);
-        long usuarioId = usuario.getId();
-        logger.info("Listando categorias do usuario: {}", usuarioId);
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Categoria> categoriasPage = repository.findByUsuarioId(usuarioId, pageable);
-        List<Categoria> categorias = categoriasPage.getContent();
-        logger.info("Encontradas {} categorias para o usuario {}", categorias.size(), usuarioId);
+    public Page<Categoria> obterPorUsuarioPaginado(String token, int pagina, int tamanho){
+        logger.info("Buscando categorias paginadas do usuario - pagina: {}, tamanho: {}", pagina, tamanho);
+        Usuario usuario = tokenService.obterUsuario(token.replace("Bearer ", ""));
+        Pageable pageable = PageRequest.of(pagina, tamanho, Sort.by("id").descending());
+        Page<Categoria> categorias = repository.findByUsuarioId(usuario.getId(), pageable);
+        logger.info("Retornando {} categorias na pagina {}", categorias.getContent().size(), pagina);
         return categorias;
     }
     

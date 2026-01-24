@@ -4,13 +4,15 @@ import { Categoria, CategoriaCadastroDto } from '../types/categoria';
 const API_URL = 'http://localhost:8080/api/categorias';
 
 const categoriaApiService = {
-  async listarTodas(): Promise<Categoria[]> {
-    const response = await axios.get<Categoria[]>(`${API_URL}/usuario`, {
+  async obterPorUsuario(pagina: number = 0, tamanho: number = 50): Promise<any> {
+    console.log(`Carregando categorias - página: ${pagina}, tamanho: ${tamanho}`);
+    const response = await axios.get(`${API_URL}/usuario?pagina=${pagina}&tamanho=${tamanho}`, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
       },
     });
+    console.log('Resposta da API categorias:', response.data);
     return response.data;
   },
 
@@ -33,16 +35,6 @@ const categoriaApiService = {
     });
     return response.data;
   },
-
-  async obterPorUsuario(usuarioId: number): Promise<Categoria[]> {
-    // TODO: Implementar quando o back-end tiver endpoint para listar categorias por usuário
-    return [];
-  },
-
-  async obterPorTipo(tipo: string): Promise<Categoria[]> {
-    // TODO: Implementar quando o back-end tiver endpoint para listar categorias por tipo
-    return [];
-  }
 };
 
 export default categoriaApiService;

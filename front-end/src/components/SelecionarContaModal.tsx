@@ -97,9 +97,9 @@ const SelecionarContaModal: React.FC<SelecionarContaModalProps> = ({
   );
 
   const handleContaClick = (conta: Conta) => {
-    // Fecha o modal imediatamente
+   
     onClose();
-    // Delay para garantir fechamento completo antes da navegação
+   
     setTimeout(() => {
       onContaSelect(conta);
     }, 300);

@@ -38,8 +38,7 @@ function App() {
   };
 
   const handleContaAtualizada = () => {
-    // Não força mais a mudança de tela, apenas atualiza os dados
-    // A mudança de tela agora é controlada pelo usuário
+    
   };
 
   const handleTrocarConta = () => {

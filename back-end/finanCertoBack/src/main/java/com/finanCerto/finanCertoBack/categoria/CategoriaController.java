@@ -8,8 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/categorias")
 public class CategoriaController {
@@ -31,11 +29,13 @@ public class CategoriaController {
     }
     
     @GetMapping("/usuario")
-    public ResponseEntity<List<Categoria>> listarCategoriasPorUsuario(@RequestHeader(value = "Authorization", required = false) String authorization){
-        logger.info("Recebido a requisicao para listar categorias do usuario logado");
-        String token = authorization.replace("Bearer ", "");
-        List<Categoria> categorias = service.listarPorUsuario(token);
-        logger.info("Retornando {} categorias do usuario", categorias.size());
+    public ResponseEntity<Page<Categoria>> listarPorUsuario(
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "6") int tamanho,
+            @RequestHeader("Authorization") String token){
+        logger.info("Buscando categorias do usuario paginadas - pagina: {}, tamanho: {}", pagina, tamanho);
+        Page<Categoria> categorias = service.obterPorUsuarioPaginado(token, pagina, tamanho);
+        logger.info("Retornando {} categorias na pagina {}", categorias.getContent().size(), pagina);
         return ResponseEntity.ok(categorias);
     }
     

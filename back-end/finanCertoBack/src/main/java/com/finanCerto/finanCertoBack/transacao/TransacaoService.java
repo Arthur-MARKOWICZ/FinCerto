@@ -65,7 +65,7 @@ public class TransacaoService {
         Transacao transacao = new Transacao(dto,usuario,categoria,conta);
         if(transacao.getTipo() == Tipos.DESPESA){
             contaService.DiminuirSaldo(transacao.getValor(), transacao.getConta());
-            // Tornando orçamento opcional - não lança exceção se não existir
+           
             try {
                 orcamentoService.adicionar(dto.valor(),categoria);
             } catch (Exception e) {
@@ -74,7 +74,7 @@ public class TransacaoService {
         }
         else if (transacao.getTipo() == Tipos.RECEITA){
             contaService.AdicionarSaldo(transacao.getValor(), transacao.getConta());
-            // Tornando orçamento opcional - não lança exceção se não existir
+          
             try {
                 orcamentoService.adicionar(dto.valor(),categoria);
             } catch (Exception e) {

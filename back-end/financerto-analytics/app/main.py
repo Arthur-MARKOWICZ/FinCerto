@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-# Usar imports relativos para funcionar bem quando o módulo é carregado como "app.main"
+
 from .database import get_db
 from .report_controller import router as relatorio_router
 

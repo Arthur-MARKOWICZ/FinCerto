@@ -18,10 +18,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-/**
- * Controller para geração de relatórios financeiros
- * Proxies requisições para a API FastAPI de análise (analytics)
- */
+
 @RestController
 @RequestMapping("/api/relatorios")
 @Tag(name = "Relatórios", description = "Endpoints para geração de relatórios financeiros")
@@ -35,7 +32,7 @@ public class RelatorioController {
     @Value("${fastapi.base-url}")
     private String fastApiBaseUrl;
     
-    // Constantes
+    
     private static final String REPORT_ENDPOINT_PREFIX = "/api/relatorios/";
     private static final String USUARIO_ID_PARAM = "usuario_id";
     private static final String FORMATO_PARAM = "formato";
@@ -45,11 +42,7 @@ public class RelatorioController {
         this.tokenService = tokenService;
     }
 
-    /**
-     * Valida o formato do arquivo (excel ou pdf)
-     * @param formato Formato solicitado
-     * @throws IllegalArgumentException se formato é inválido
-     */
+  
     private void validarFormato(String formato) {
         if (formato == null || formato.isEmpty()) {
             throw new IllegalArgumentException("Formato não pode estar vazio");
@@ -62,19 +55,12 @@ public class RelatorioController {
         }
     }
 
-    /**
-     * Constrói URL segura para requisição ao FastAPI
-     * @param endpoint Nome do endpoint (ex: "relatorioPorCategoria")
-     * @param usuarioId ID do usuário
-     * @param parametrosAdicionais Parâmetros adicionais em pares chave-valor
-     * @return URL completa para a requisição
-     */
     private String construirUrl(String endpoint, Long usuarioId, String... parametrosAdicionais) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(fastApiBaseUrl)
             .path(REPORT_ENDPOINT_PREFIX + endpoint)
             .queryParam(USUARIO_ID_PARAM, usuarioId);
         
-        // Adicionar parâmetros extras em pares
+      
         for (int i = 0; i < parametrosAdicionais.length; i += 2) {
             if (i + 1 < parametrosAdicionais.length) {
                 uriBuilder.queryParam(parametrosAdicionais[i], parametrosAdicionais[i + 1]);
@@ -84,19 +70,11 @@ public class RelatorioController {
         return uriBuilder.toUriString();
     }
 
-    /**
-     * Executa requisição ao FastAPI e retorna o arquivo gerado
-     * @param url URL da requisição
-     * @param nomeRelatorio Nome do relatório para o arquivo
-     * @param formato Formato do arquivo (extensão)
-     * @return ResponseEntity com o arquivo
-     * @throws RestClientException se houver erro na comunicação com FastAPI
-     */
+    
     private ResponseEntity<byte[]> executarRequisicaoRelatorio(String url, String nomeRelatorio, String formato) {
         try {
             logger.info("Requisitando relatório ao FastAPI: {}", url);
             
-            // Fazer requisição GET ao FastAPI
             ResponseEntity<byte[]> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
@@ -111,7 +89,7 @@ public class RelatorioController {
                 );
             }
             
-            // Extrair tipo de conteúdo
+        
             MediaType contentType = response.getHeaders().getContentType();
             if (contentType == null) {
                 contentType = inferirMediaType(formato);
@@ -122,7 +100,7 @@ public class RelatorioController {
                 response.getBody() != null ? response.getBody().length : 0
             );
             
-            // Construir nome do arquivo
+           
             String nomeArquivo = String.format("%s.%s", nomeRelatorio, formato.toLowerCase());
             
             return ResponseEntity.ok()
@@ -144,9 +122,7 @@ public class RelatorioController {
         }
     }
 
-    /**
-     * Infere o MediaType baseado na extensão do arquivo
-     */
+ 
     private MediaType inferirMediaType(String formato) {
         String formatoNormalizado = formato.toLowerCase();
         switch (formatoNormalizado) {
@@ -162,9 +138,7 @@ public class RelatorioController {
         }
     }
 
-    /**
-     * Gera relatório de transações por categoria
-     */
+   
     @GetMapping("/relatorioPorCategoria")
     @Operation(
         summary = "Gerar relatório de transações por categoria",
@@ -187,14 +161,12 @@ public class RelatorioController {
             String token) {
         
         try {
-            // Validar entrada
+           
             validarFormato(formato);
-            
-            // Extrair usuário do token
+         
             Usuario usuario = tokenService.obterUsuario(token.replace("Bearer ", ""));
             logger.info("Gerando relatório por categoria para usuário: {}", usuario.getId());
-            
-            // Construir URL
+      
             String url = construirUrl(
                 "relatorioPorCategoria",
                 usuario.getId(),
@@ -213,9 +185,7 @@ public class RelatorioController {
         }
     }
 
-    /**
-     * Gera relatório de saldo mensal
-     */
+  
     @GetMapping("/relatorioSaldoMensal")
     @Operation(
         summary = "Gerar relatório de saldo mensal",
@@ -238,14 +208,14 @@ public class RelatorioController {
             String token) {
         
         try {
-            // Validar entrada
+            
             validarFormato(formato);
             
-            // Extrair usuário do token
+          
             Usuario usuario = tokenService.obterUsuario(token.replace("Bearer ", ""));
             logger.info("Gerando relatório de saldo mensal para usuário: {}", usuario.getId());
             
-            // Construir URL
+            
             String url = construirUrl(
                 "relatorioSaldoMensal",
                 usuario.getId(),
@@ -264,9 +234,7 @@ public class RelatorioController {
         }
     }
 
-    /**
-     * Gera relatório de transações detalhadas
-     */
+   
     @GetMapping("/relatorioTransacaoDetalhado")
     @Operation(
         summary = "Gerar relatório de transações detalhadas",
@@ -293,14 +261,14 @@ public class RelatorioController {
             String token) {
         
         try {
-            // Validar entrada
+          
             validarFormato(formato);
             
-            // Extrair usuário do token
+          
             Usuario usuario = tokenService.obterUsuario(token.replace("Bearer ", ""));
             logger.info("Gerando relatório detalhado para usuário: {}", usuario.getId());
             
-            // Construir URL
+           
             String url = construirUrl(
                 "relatorioTransacaoDetalhado",
                 usuario.getId(),

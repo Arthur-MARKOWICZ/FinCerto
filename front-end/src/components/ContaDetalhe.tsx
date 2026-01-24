@@ -48,7 +48,7 @@ const ContaDetalhe: React.FC<ContaDetalheProps> = ({
     if (conta.id) {
       contaService.obterSaldo(conta.id).then(setSaldo);
     }
-    // Não força mais a mudança de tela
+    
     onContaAtualizada?.();
   };
 
@@ -57,9 +57,9 @@ const ContaDetalhe: React.FC<ContaDetalheProps> = ({
   };
 
   const handleTrocarConta = (novaConta: Conta) => {
-    // Fecha o modal primeiro
+   
     setModalSelecionarAberto(false);
-    // Delay sincronizado com o SelecionarContaModal (300ms)
+   
     setTimeout(() => {
       onTrocarConta?.();
     }, 300);

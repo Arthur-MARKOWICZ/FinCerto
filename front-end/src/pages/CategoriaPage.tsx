@@ -13,26 +13,35 @@ const CategoriaPage: React.FC = () => {
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   const [carregando, setCarregando] = useState<boolean>(true);
   const [erro, setErro] = useState<string>('');
+  const [paginaAtualCategorias, setPaginaAtualCategorias] = useState<number>(0);
+  const [totalPaginasCategorias, setTotalPaginasCategorias] = useState<number>(0);
+  const [totalElementosCategorias, setTotalElementosCategorias] = useState<number>(0);
   const [paginaAtualOrcamentos, setPaginaAtualOrcamentos] = useState<number>(0);
   const [totalPaginasOrcamentos, setTotalPaginasOrcamentos] = useState<number>(0);
   const [totalElementosOrcamentos, setTotalElementosOrcamentos] = useState<number>(0);
   const [paginaAtualTransacoes, setPaginaAtualTransacoes] = useState<number>(0);
   const [totalPaginasTransacoes, setTotalPaginasTransacoes] = useState<number>(0);
   const [totalElementosTransacoes, setTotalElementosTransacoes] = useState<number>(0);
-  const tamanhoPagina = 5;
+  const tamanhoPagina = 6;
 
   useEffect(() => {
     carregarCategorias();
   }, []);
 
-  const carregarCategorias = async () => {
+  const carregarCategorias = async (pagina: number = 0) => {
     try {
       setCarregando(true);
-      const categoriasData = await categoriaApiService.listarTodas();
-      setCategorias(categoriasData);
+      const categoriasData = await categoriaApiService.obterPorUsuario(pagina, tamanhoPagina);
+      setCategorias(categoriasData.content || []);
+      setTotalPaginasCategorias(categoriasData.totalPages || 0);
+      setTotalElementosCategorias(categoriasData.totalElements || 0);
+      setPaginaAtualCategorias(pagina);
     } catch (error: any) {
       console.error('Erro ao carregar categorias:', error);
-      setErro('Erro ao carregar categorias. Tente novamente mais tarde.');
+      setErro('Erro ao carregar categorias.');
+      setCategorias([]);
+      setTotalPaginasCategorias(0);
+      setTotalElementosCategorias(0);
     } finally {
       setCarregando(false);
     }
@@ -46,10 +55,9 @@ const CategoriaPage: React.FC = () => {
       setPaginaAtualOrcamentos(0);
       setPaginaAtualTransacoes(0);
 
-      // Carregar orçamentos da categoria com paginação
       await carregarOrcamentosDaCategoria(categoria.nome, 0);
 
-      // Carregar transações da categoria com paginação
+      
       await carregarTransacoesDaCategoria(categoria.nome, 0);
     } catch (error: any) {
       console.error('Erro ao carregar dados da categoria:', error);
@@ -101,6 +109,18 @@ const CategoriaPage: React.FC = () => {
     }
   };
 
+  const proximaPaginaCategorias = () => {
+    if (paginaAtualCategorias < totalPaginasCategorias - 1) {
+      carregarCategorias(paginaAtualCategorias + 1);
+    }
+  };
+
+  const paginaAnteriorCategorias = () => {
+    if (paginaAtualCategorias > 0) {
+      carregarCategorias(paginaAtualCategorias - 1);
+    }
+  };
+
   const proximaPaginaTransacoes = () => {
     if (categoriaSelecionada && paginaAtualTransacoes < totalPaginasTransacoes - 1) {
       carregarTransacoesDaCategoria(categoriaSelecionada.nome, paginaAtualTransacoes + 1);
@@ -128,6 +148,9 @@ const CategoriaPage: React.FC = () => {
     setCategoriaSelecionada(null);
     setOrcamentos([]);
     setTransacoes([]);
+    setPaginaAtualCategorias(0);
+    setTotalPaginasCategorias(0);
+    setTotalElementosCategorias(0);
     setPaginaAtualOrcamentos(0);
     setTotalPaginasOrcamentos(0);
     setTotalElementosOrcamentos(0);
@@ -168,34 +191,68 @@ const CategoriaPage: React.FC = () => {
         )}
 
         {!categoriaSelecionada ? (
-          // Lista de categorias
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categorias.map((categoria) => (
-              <div
-                key={categoria.id}
-                onClick={() => handleCategoriaClick(categoria)}
-                className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">{categoria.nome}</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    categoria.tipo === 'RECEITA' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {categoria.tipo}
-                  </span>
-                </div>
-                <div className="text-gray-600 text-sm">
-                  Clique para ver detalhes
-                </div>
+         
+          <div className="space-y-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">Categorias</h2>
+              <div className="text-sm text-gray-500">
+                Mostrando {categorias.length} de {totalElementosCategorias} categorias
               </div>
-            ))}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {categorias.map((categoria) => (
+                <div
+                  key={categoria.id}
+                  onClick={() => handleCategoriaClick(categoria)}
+                  className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800">{categoria.nome}</h3>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      categoria.tipo === 'RECEITA' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {categoria.tipo}
+                    </span>
+                  </div>
+                  <div className="text-gray-600 text-sm">
+                    Clique para ver detalhes
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Botões de Paginação das Categorias */}
+            {totalPaginasCategorias > 1 && (
+              <div className="flex justify-between items-center mt-6">
+                <button
+                  onClick={paginaAnteriorCategorias}
+                  disabled={paginaAtualCategorias === 0}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Anterior
+                </button>
+                
+                <div className="text-sm text-gray-600">
+                  Página {paginaAtualCategorias + 1} de {totalPaginasCategorias}
+                </div>
+                
+                <button
+                  onClick={proximaPaginaCategorias}
+                  disabled={paginaAtualCategorias >= totalPaginasCategorias - 1}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Próximas {tamanhoPagina} →
+                </button>
+              </div>
+            )}
           </div>
         ) : (
-          // Detalhes da categoria selecionada
+        
           <div className="space-y-6">
-            {/* Orçamentos */}
+        
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-gray-800">Orçamentos</h2>
@@ -252,7 +309,7 @@ const CategoriaPage: React.FC = () => {
                     })}
                   </div>
 
-                  {/* Botões de Paginação dos Orçamentos */}
+                  
                   {totalPaginasOrcamentos > 1 && (
                     <div className="flex justify-between items-center mt-6">
                       <button
@@ -280,7 +337,7 @@ const CategoriaPage: React.FC = () => {
               )}
             </div>
 
-            {/* Transações */}
+   
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-gray-800">Transações</h2>
@@ -341,7 +398,7 @@ const CategoriaPage: React.FC = () => {
                     </table>
                   </div>
 
-                  {/* Botões de Paginação das Transações */}
+                 
                   {totalPaginasTransacoes > 1 && (
                     <div className="flex justify-between items-center mt-6">
                       <button

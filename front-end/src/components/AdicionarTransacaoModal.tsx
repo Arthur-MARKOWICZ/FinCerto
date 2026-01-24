@@ -19,7 +19,7 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<TransacaoCadastroDto>({
     valor: 0,
-    data: new Date().toISOString().slice(0, 16), // Formato YYYY-MM-DDTHH:mm para LocalDateTime
+    data: new Date().toISOString().slice(0, 16), 
     descricao: '',
     tipo: TransacaoTipos.DESPESA,
     nomeConta: contaNome,
@@ -42,22 +42,49 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
   const carregarCategorias = async () => {
     try {
       setCarregandoCategorias(true);
-      // Buscando categorias reais do back-end
-      const categoriasReais = await categoriaApiService.listarTodas();
       
-      // Filtrando categorias por tipo
-      const categoriasFiltradas = categoriasReais
-        .filter(cat => cat.tipo === (formData.tipo === TransacaoTipos.DESPESA ? 'DESPESA' : 'RECEITA'))
-        .map(cat => cat.nome);
+     
+      let todasCategorias: any[] = [];
+      let pagina = 0;
+      let temMaisPaginas = true;
+      
+      while (temMaisPaginas) {
+        console.log(`Carregando página ${pagina} de categorias...`);
+        const response = await categoriaApiService.obterPorUsuario(pagina, 50);
+        console.log(`Resposta página ${pagina}:`, response);
+        
+        const categoriasDaPagina = response.content || [];
+        todasCategorias = [...todasCategorias, ...categoriasDaPagina];
+        
+       
+        temMaisPaginas = response.totalPages > pagina + 1 && categoriasDaPagina.length > 0;
+        pagina++;
+        
+       
+        if (pagina >= 10) {
+          console.warn('Limite de páginas alcançado, parando carregamento de categorias');
+          break;
+        }
+      }
+      
+      console.log('Total de categorias carregadas:', todasCategorias.length);
+      console.log('Tipos de transação:', formData.tipo);
+      
+      const categoriasFiltradas = todasCategorias
+        .filter((cat: any) => {
+          const tipoEsperado = formData.tipo === TransacaoTipos.DESPESA ? 'DESPESA' : 'RECEITA';
+          const match = cat.tipo === tipoEsperado;
+          console.log(`Categoria ${cat.nome} (${cat.tipo}) vs ${tipoEsperado}: ${match}`);
+          return match;
+        })
+        .map((cat: any) => cat.nome);
+      
+      console.log('Categorias filtradas:', categoriasFiltradas);
       
       setCategorias(categoriasFiltradas);
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
-      // Fallback para categorias padrão em caso de erro
-      const categoriasPadrao = formData.tipo === TransacaoTipos.DESPESA 
-        ? ['Alimentação', 'Transporte', 'Moradia', 'Saúde', 'Educação', 'Lazer', 'Outros']
-        : ['Salário', 'Freelance', 'Investimentos', 'Vendas', 'Outros'];
-      setCategorias(categoriasPadrao);
+    
     } finally {
       setCarregandoCategorias(false);
     }
@@ -100,7 +127,7 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
         token: localStorage.getItem('token') || ''
       };
       await categoriaApiService.cadastrar(categoriaDto);
-      // Recarrega a lista de categorias após criar uma nova
+      
       await carregarCategorias();
       setFormData((prev: TransacaoCadastroDto) => ({ ...prev, nomeCategoria: novaCategoria.trim() }));
       setNovaCategoria('');

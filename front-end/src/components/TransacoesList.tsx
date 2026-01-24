@@ -179,7 +179,7 @@ const TransacoesList: React.FC<TransacoesListProps> = ({
         </div>
       </div>
       
-      {/* Botões de Paginação */}
+      
       {totalPaginas > 1 && (
         <div className="flex justify-between items-center mt-4">
           <div className="text-sm text-gray-500">

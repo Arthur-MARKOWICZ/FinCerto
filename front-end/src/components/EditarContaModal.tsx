@@ -55,7 +55,7 @@ const EditarContaModal: React.FC<EditarContaModalProps> = ({
     setCarregando(true);
 
     try {
-      // Não envia o saldoInicial para não zerar o saldo atual
+     
       const dadosAtualizacao = {
         ...formData,
         saldoInicial: conta.saldoInicial || 0 // Mantém o saldo original
