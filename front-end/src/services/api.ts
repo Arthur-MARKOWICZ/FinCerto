@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { UsuarioCadastroDto, LoginRequestDto, LoginResponseDto, Usuario } from '../types/usuario';
 import { ContaCadastroDto, Conta, Tipos } from '../types/conta';
+import { TransacaoCadastroDto, Transacao, TransacaoTipos } from '../types/transacao';
+import { CategoriaCadastroDto, Categoria } from '../types/categoria';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -54,6 +56,30 @@ export const contaService = {
 
   atualizar: async (id: number, dados: ContaCadastroDto): Promise<Conta> => {
     const response = await api.post<Conta>(`/contas/alterarDadosConta?id=${id}`, dados);
+    return response.data;
+  },
+};
+
+export const transacaoService = {
+  cadastrar: async (dados: TransacaoCadastroDto): Promise<Transacao> => {
+    const response = await api.post<Transacao>('/transacao', dados);
+    return response.data;
+  },
+
+  obterPorId: async (id: number): Promise<Transacao> => {
+    const response = await api.get<Transacao>(`/transacao/${id}`);
+    return response.data;
+  },
+};
+
+export const categoriaService = {
+  cadastrar: async (dados: CategoriaCadastroDto): Promise<Categoria> => {
+    const response = await api.post<Categoria>('/categorias', dados);
+    return response.data;
+  },
+
+  obterPorNome: async (nome: string): Promise<Categoria> => {
+    const response = await api.get<Categoria>(`/categorias/nome/${nome}`);
     return response.data;
   },
 };

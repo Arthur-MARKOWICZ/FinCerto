@@ -1,15 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Conta, Tipos } from '../types/conta';
 import { contaService } from '../services/api';
+import AdicionarTransacaoModal from './AdicionarTransacaoModal';
+import EditarContaModal from './EditarContaModal';
+import TransacoesList from './TransacoesList';
+import OrcamentoList from './OrcamentoList';
+import SelecionarContaModal from './SelecionarContaModal';
 
 interface ContaDetalheProps {
   conta: Conta;
   onVoltar: () => void;
+  onContaAtualizada?: () => void;
+  onTrocarConta?: () => void;
 }
 
-const ContaDetalhe: React.FC<ContaDetalheProps> = ({ conta, onVoltar }) => {
+const ContaDetalhe: React.FC<ContaDetalheProps> = ({ 
+  conta, 
+  onVoltar, 
+  onContaAtualizada,
+  onTrocarConta
+}) => {
   const [saldo, setSaldo] = useState<number>(0);
   const [carregandoSaldo, setCarregandoSaldo] = useState<boolean>(true);
+  const [modalTransacaoAberto, setModalTransacaoAberto] = useState<boolean>(false);
+  const [modalEditarAberto, setModalEditarAberto] = useState<boolean>(false);
+  const [modalSelecionarAberto, setModalSelecionarAberto] = useState<boolean>(false);
 
   useEffect(() => {
     const carregarSaldo = async () => {
@@ -28,6 +43,27 @@ const ContaDetalhe: React.FC<ContaDetalheProps> = ({ conta, onVoltar }) => {
 
     carregarSaldo();
   }, [conta.id]);
+
+  const handleTransacaoAdicionada = () => {
+    if (conta.id) {
+      contaService.obterSaldo(conta.id).then(setSaldo);
+    }
+    // Não força mais a mudança de tela
+    onContaAtualizada?.();
+  };
+
+  const handleContaAtualizada = () => {
+    onContaAtualizada?.();
+  };
+
+  const handleTrocarConta = (novaConta: Conta) => {
+    // Fecha o modal primeiro
+    setModalSelecionarAberto(false);
+    // Delay sincronizado com o SelecionarContaModal (300ms)
+    setTimeout(() => {
+      onTrocarConta?.();
+    }, 300);
+  };
 
   const getTipoLabel = (tipo: Tipos): string => {
     switch (tipo) {
@@ -89,6 +125,13 @@ const ContaDetalhe: React.FC<ContaDetalheProps> = ({ conta, onVoltar }) => {
                   )}
                 </div>
               </div>
+              <button
+                onClick={() => setModalSelecionarAberto(true)}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md flex items-center space-x-2"
+              >
+                <span>⚡</span>
+                <span>Trocar Conta</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -120,13 +163,16 @@ const ContaDetalhe: React.FC<ContaDetalheProps> = ({ conta, onVoltar }) => {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Ações Rápidas</h2>
                 
                 <div className="space-y-3">
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
-                    Ver Transações
-                  </button>
-                  <button className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+                  <button
+                    onClick={() => setModalTransacaoAberto(true)}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+                  >
                     Adicionar Transação
                   </button>
-                  <button className="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md">
+                  <button
+                    onClick={() => setModalEditarAberto(true)}
+                    className="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
+                  >
                     Editar Conta
                   </button>
                 </div>
@@ -134,40 +180,45 @@ const ContaDetalhe: React.FC<ContaDetalheProps> = ({ conta, onVoltar }) => {
             </div>
 
             <div className="mt-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Informações Adicionais</h2>
-              
-              <div className="bg-gray-50 rounded-lg p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-600 mb-2">Estatísticas do Mês</h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Receitas:</span>
-                        <span className="text-green-600 font-medium">R$ 0,00</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Despesas:</span>
-                        <span className="text-red-600 font-medium">R$ 0,00</span>
-                      </div>
-                      <div className="flex justify-between font-semibold">
-                        <span className="text-gray-900">Saldo do Mês:</span>
-                        <span className="text-gray-900">R$ 0,00</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-600 mb-2">Últimas Atividades</h3>
-                    <div className="text-gray-500 text-sm">
-                      Nenhuma transação registrada ainda.
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <TransacoesList 
+                contaId={conta.id || 0} 
+                contaNome={conta.nome}
+                onTransacaoAtualizada={handleTransacaoAdicionada}
+              />
+            </div>
+
+            <div className="mt-8">
+              <OrcamentoList />
             </div>
           </div>
         </div>
       </div>
+
+      <AdicionarTransacaoModal
+        isOpen={modalTransacaoAberto}
+        onClose={() => setModalTransacaoAberto(false)}
+        onTransacaoAdicionada={handleTransacaoAdicionada}
+        contaNome={conta.nome}
+      />
+
+      <EditarContaModal
+        isOpen={modalEditarAberto}
+        onClose={() => setModalEditarAberto(false)}
+        onContaAtualizada={handleContaAtualizada}
+        conta={{
+          id: conta.id || 0,
+          nome: conta.nome,
+          tipos: conta.tipos,
+          saldoInicial: conta.saldo
+        }}
+      />
+
+      <SelecionarContaModal
+        isOpen={modalSelecionarAberto}
+        onClose={() => setModalSelecionarAberto(false)}
+        onContaSelect={handleTrocarConta}
+        contaAtualId={conta.id}
+      />
     </div>
   );
 };

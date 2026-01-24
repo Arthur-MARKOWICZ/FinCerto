@@ -35,6 +35,7 @@ services:
         condition: service_healthy
     environment:
       # Usar o container_name do Postgres (estável) para evitar falhas de DNS do alias "postgres"
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql_FinanCerto_deploy:5432/finanCerto
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}

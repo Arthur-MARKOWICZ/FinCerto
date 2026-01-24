@@ -2,20 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { Conta, Tipos } from '../types/conta';
 import { contaService } from '../services/api';
 import CriarContaModal from './CriarContaModal';
+import SelecionarContaModal from './SelecionarContaModal';
 
 interface ContasDashboardProps {
   onContaSelect: (conta: Conta) => void;
+  contaAtualId?: number;
 }
 
 interface ContaComSaldo extends Conta {
   saldoAtual?: number;
 }
 
-const ContasDashboard: React.FC<ContasDashboardProps> = ({ onContaSelect }) => {
+const ContasDashboard: React.FC<ContasDashboardProps> = ({ 
+  onContaSelect, 
+  contaAtualId 
+}) => {
   const [contas, setContas] = useState<ContaComSaldo[]>([]);
   const [carregando, setCarregando] = useState<boolean>(true);
   const [erro, setErro] = useState<string>('');
-  const [modalAberto, setModalAberto] = useState<boolean>(false);
+  const [modalCriarAberto, setModalCriarAberto] = useState<boolean>(false);
+  const [modalSelecionarAberto, setModalSelecionarAberto] = useState<boolean>(false);
 
   const carregarSaldos = async (contasBase: Conta[]): Promise<ContaComSaldo[]> => {
     const contasComSaldos = await Promise.all(
@@ -99,13 +105,22 @@ const ContasDashboard: React.FC<ContasDashboardProps> = ({ onContaSelect }) => {
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Minhas Contas</h1>
-            <button
-              onClick={() => setModalAberto(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center space-x-2"
-            >
-              <span className="text-lg">+</span>
-              <span>Nova Conta</span>
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setModalSelecionarAberto(true)}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md flex items-center space-x-2"
+              >
+                <span className="text-lg">⚡</span>
+                <span>Trocar Conta</span>
+              </button>
+              <button
+                onClick={() => setModalCriarAberto(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center space-x-2"
+              >
+                <span className="text-lg">+</span>
+                <span>Nova Conta</span>
+              </button>
+            </div>
           </div>
 
           {erro && (
@@ -122,7 +137,7 @@ const ContasDashboard: React.FC<ContasDashboardProps> = ({ onContaSelect }) => {
             <div className="text-center py-12">
               <div className="text-gray-500 text-lg mb-4">Você ainda não tem contas cadastradas</div>
               <button
-                onClick={() => setModalAberto(true)}
+                onClick={() => setModalCriarAberto(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md"
               >
                 Criar Primeira Conta
@@ -134,13 +149,22 @@ const ContasDashboard: React.FC<ContasDashboardProps> = ({ onContaSelect }) => {
                 <div
                   key={conta.id}
                   onClick={() => onContaSelect(conta)}
-                  className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                  className={`bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow duration-200 border-2 ${
+                    contaAtualId === conta.id ? 'border-blue-500' : 'border-transparent'
+                  }`}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">{conta.nome}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTipoCor(conta.tipos)}`}>
-                      {getTipoLabel(conta.tipos)}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      {contaAtualId === conta.id && (
+                        <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                          Atual
+                        </span>
+                      )}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTipoCor(conta.tipos)}`}>
+                        {getTipoLabel(conta.tipos)}
+                      </span>
+                    </div>
                   </div>
                   
                   <div className="space-y-2">
@@ -163,7 +187,7 @@ const ContasDashboard: React.FC<ContasDashboardProps> = ({ onContaSelect }) => {
 
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="text-sm text-blue-600 font-medium text-center">
-                      Clique para ver detalhes →
+                      {contaAtualId === conta.id ? 'Conta atual' : 'Clique para ver detalhes →'}
                     </div>
                   </div>
                 </div>
@@ -174,9 +198,16 @@ const ContasDashboard: React.FC<ContasDashboardProps> = ({ onContaSelect }) => {
       </div>
 
       <CriarContaModal
-        isOpen={modalAberto}
-        onClose={() => setModalAberto(false)}
+        isOpen={modalCriarAberto}
+        onClose={() => setModalCriarAberto(false)}
         onContaCriada={carregarContas}
+      />
+
+      <SelecionarContaModal
+        isOpen={modalSelecionarAberto}
+        onClose={() => setModalSelecionarAberto(false)}
+        onContaSelect={onContaSelect}
+        contaAtualId={contaAtualId}
       />
     </div>
   );

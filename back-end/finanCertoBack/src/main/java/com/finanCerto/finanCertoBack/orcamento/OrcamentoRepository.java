@@ -1,6 +1,8 @@
 package com.finanCerto.finanCertoBack.orcamento;
 
 import com.finanCerto.finanCertoBack.categoria.Categoria;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface OrcamentoRepository extends JpaRepository<Orcamento,Long> {
@@ -9,4 +11,8 @@ public interface OrcamentoRepository extends JpaRepository<Orcamento,Long> {
     Orcamento findByUsuarioIdAndNome(Long usuarioId,String nome);
 
     Orcamento findByCategoria(Categoria categoria);
+    
+    Page<Orcamento> findByUsuarioId(Long usuarioId, Pageable pageable);
+    
+    Page<Orcamento> findByCategoriaId(Long categoriaId, Pageable pageable);
 }
