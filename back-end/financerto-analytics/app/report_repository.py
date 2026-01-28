@@ -111,8 +111,7 @@ class ReportRepository:
         }
         
         result = self.session.execute(sql, params).fetchall()
-        
-        # Converte o resultado para uma lista de dicionários
+      
         return [{
             'id': row[0],
             'data': row[1],
@@ -139,7 +138,7 @@ class ReportRepository:
         """
         print(f"[DEBUG] Buscando saldo mensal - usuario_id: {usuario_id}, ano: {ano}, conta_id: {conta_id}")
         
-        # Verifica se o usuário existe
+       
         check_user = text("SELECT id FROM tb_usuario WHERE id = :usuario_id")
         user_exists = self.session.execute(check_user, {"usuario_id": usuario_id}).fetchone()
         
@@ -147,7 +146,7 @@ class ReportRepository:
             print(f"[ERRO] Usuário com ID {usuario_id} não encontrado")
             return []
             
-        # Verifica se existem transações para o usuário
+       
         check_sql = text("""
             SELECT COUNT(*) as total 
             FROM tb_transacao 
@@ -163,7 +162,7 @@ class ReportRepository:
         print(f"[DEBUG] Total de transações encontradas: {total_transacoes}")
         
         if total_transacoes == 0:
-            # Verifica os tipos de transações disponíveis
+            
             check_types = text("""
                 SELECT DISTINCT tipo, COUNT(*) as total 
                 FROM tb_transacao 
@@ -208,7 +207,7 @@ class ReportRepository:
         
         result = self.session.execute(sql, params).fetchall()
         
-        # Converte o resultado para uma lista de dicionários
+        
         return [{
             'mes': row[0].strftime('%Y-%m'),
             'mes_nome': row[0].strftime('%B/%Y').capitalize(),
