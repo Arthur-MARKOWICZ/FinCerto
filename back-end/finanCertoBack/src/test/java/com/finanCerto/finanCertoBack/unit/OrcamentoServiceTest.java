@@ -17,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDate;
 
@@ -106,13 +108,14 @@ class OrcamentoServiceTest {
     @DisplayName("Deve obter orçamento por categoria ou lançar exceção")
     void deveObterPorCategoriaOuLancar() {
         Orcamento orcamento = new Orcamento(dto, categoria, usuario);
-        when(repository.findByCategoria(categoria)).thenReturn(orcamento);
+        when(tokenService.obterUsuario("token-123")).thenReturn(usuario);
+        when(categoriaService.obterCategoriaPorNome("Alimentacao")).thenReturn(categoria);
+        when(repository.findByCategoriaId(categoria.getId(), PageRequest.of(0, 10, Sort.by("id").descending())))
+                .thenReturn(new org.springframework.data.domain.PageImpl<>(java.util.List.of(orcamento)));
 
-        Orcamento resultado = orcamentoService.obterPorCategoria(categoria);
-        assertEquals(orcamento, resultado);
-
-        when(repository.findByCategoria(categoria)).thenReturn(null);
-        assertThrows(OrcamentoNaoEncontrado.class, () -> orcamentoService.obterPorCategoria(categoria));
+        var resultado = orcamentoService.obterPorCategoria("Alimentacao", "token-123", 0, 10);
+        assertEquals(1, resultado.getContent().size());
+        assertEquals(orcamento, resultado.getContent().get(0));
     }
 
     @Test
@@ -120,7 +123,8 @@ class OrcamentoServiceTest {
     void deveAdicionarValor() {
         Orcamento orcamento = new Orcamento(dto, categoria, usuario);
         orcamento.setValorAtual(200.0);
-        when(repository.findByCategoria(categoria)).thenReturn(orcamento);
+        when(repository.findByCategoriaId(categoria.getId(), PageRequest.of(0, 1)))
+                .thenReturn(new org.springframework.data.domain.PageImpl<>(java.util.List.of(orcamento)));
 
         orcamentoService.adicionar(50.0, categoria);
 

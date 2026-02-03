@@ -5,9 +5,10 @@ import ContasDashboard from './components/ContasDashboard';
 import ContaDetalhe from './components/ContaDetalhe';
 import OrcamentoPage from './pages/OrcamentoPage';
 import CategoriaPage from './pages/CategoriaPage';
+import RelatorioPage from './pages/RelatorioPage';
 import { Conta } from './types/conta';
 
-type Tela = 'login' | 'cadastro' | 'dashboard' | 'contaDetalhe' | 'orcamentos' | 'categorias';
+type Tela = 'login' | 'cadastro' | 'dashboard' | 'contaDetalhe' | 'orcamentos' | 'categorias' | 'relatorios';
 
 function App() {
   const [telaAtual, setTelaAtual] = useState<Tela>('login');
@@ -53,6 +54,10 @@ function App() {
     setTelaAtual('categorias');
   };
 
+  const handleIrParaRelatorios = () => {
+    setTelaAtual('relatorios');
+  };
+
   const renderTela = () => {
     switch (telaAtual) {
       case 'login':
@@ -92,6 +97,12 @@ function App() {
                       className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium"
                     >
                       Orçamentos
+                    </button>
+                    <button
+                      onClick={handleIrParaRelatorios}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    >
+                      Relatórios
                     </button>
                     <button
                       onClick={handleLogout}
@@ -198,6 +209,36 @@ function App() {
               </div>
             </nav>
             <CategoriaPage />
+          </div>
+        );
+      
+      case 'relatorios':
+        return (
+          <div className="min-h-screen bg-gray-50">
+            <nav className="bg-white shadow">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between h-16">
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => setTelaAtual('dashboard')}
+                      className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                    >
+                      ← Voltar
+                    </button>
+                    <h1 className="text-xl font-bold text-gray-900 ml-4">Relatórios</h1>
+                  </div>
+                  <div className="flex items-center">
+                    <button
+                      onClick={handleLogout}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    >
+                      Sair
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </nav>
+            <RelatorioPage />
           </div>
         );
       

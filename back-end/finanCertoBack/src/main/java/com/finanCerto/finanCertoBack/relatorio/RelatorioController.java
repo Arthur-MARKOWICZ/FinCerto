@@ -33,7 +33,7 @@ public class RelatorioController {
     private String fastApiBaseUrl;
     
     
-    private static final String REPORT_ENDPOINT_PREFIX = "/api/relatorios/";
+    private static final String REPORT_ENDPOINT_PREFIX = "/";
     private static final String USUARIO_ID_PARAM = "usuario_id";
     private static final String FORMATO_PARAM = "formato";
     private static final String TIPO_PARAM = "tipo";
