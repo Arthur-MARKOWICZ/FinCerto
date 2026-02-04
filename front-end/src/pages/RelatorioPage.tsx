@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { relatorioService, RelatorioMensal, RelatorioCategoria, RelatorioPeriodo } from '../services/relatorioApi';
+import { categoriaService } from '../services/api';
+import { Categoria } from '../types/categoria';
 
 const RelatorioPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'mensal' | 'categoria' | 'periodo' | 'anual'>('mensal');
@@ -14,6 +16,8 @@ const RelatorioPage: React.FC = () => {
   // Estados para relatório por categoria
   const [dataInicio, setDataInicio] = useState(new Date().toISOString().split('T')[0]);
   const [dataFim, setDataFim] = useState(new Date().toISOString().split('T')[0]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState<string>('');
   const [relatorioCategoria, setRelatorioCategoria] = useState<RelatorioCategoria[]>([]);
 
   // Estados para relatório de período
@@ -48,11 +52,12 @@ const RelatorioPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const blob = await relatorioService.obterRelatorioPorCategoria(dataInicio, dataFim);
+      const blob = await relatorioService.obterRelatorioPorCategoria(dataInicio, dataFim, categoriaSelecionada || undefined);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `relatorio_categorias_${dataInicio}_${dataFim}.xlsx`;
+      const categoriaNome = categoriaSelecionada ? categorias.find(c => c.id?.toString() === categoriaSelecionada)?.nome || categoriaSelecionada : 'todas-categorias';
+      a.download = `relatorio_categorias_${categoriaNome}_${dataInicio}_${dataFim}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -109,7 +114,17 @@ const RelatorioPage: React.FC = () => {
 
   useEffect(() => {
     // Não carregar automaticamente, apenas quando o usuário clicar no botão
+    carregarCategorias();
   }, []);
+
+  const carregarCategorias = async () => {
+    try {
+      const categoriasData = await categoriaService.listarTodas();
+      setCategorias(categoriasData);
+    } catch (err: any) {
+      console.error('Erro ao carregar categorias:', err);
+    }
+  };
 
   const formatarMoeda = (valor: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -248,31 +263,55 @@ const RelatorioPage: React.FC = () => {
           {/* Relatório por Categoria */}
           {activeTab === 'categoria' && !loading && (
             <div>
-              <div className="mb-6 flex gap-4 items-end">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Data Início</label>
-                  <input
-                    type="date"
-                    value={dataInicio}
-                    onChange={(e) => setDataInicio(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  />
+              <div className="mb-6">
+                {categoriaSelecionada && (
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Filtro aplicado:</strong> Relatório será gerado apenas para a categoria "{categorias.find(c => c.id?.toString() === categoriaSelecionada)?.nome || categoriaSelecionada}"
+                    </p>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Data Início</label>
+                    <input
+                      type="date"
+                      value={dataInicio}
+                      onChange={(e) => setDataInicio(e.target.value)}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Data Fim</label>
+                    <input
+                      type="date"
+                      value={dataFim}
+                      onChange={(e) => setDataFim(e.target.value)}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Categoria (Opcional)</label>
+                    <select
+                      value={categoriaSelecionada}
+                      onChange={(e) => setCategoriaSelecionada(e.target.value)}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Todas as categorias</option>
+                      {categorias.map((cat) => (
+                        <option key={cat.id || cat.nome} value={cat.id?.toString() || cat.nome}>
+                          {cat.nome} ({cat.tipo})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    onClick={carregarRelatorioCategoria}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    📥 Baixar Relatório Excel
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Data Fim</label>
-                  <input
-                    type="date"
-                    value={dataFim}
-                    onChange={(e) => setDataFim(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <button
-                  onClick={carregarRelatorioCategoria}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                >
-                  📥 Baixar Relatório Excel
-                </button>
               </div>
 
               {relatorioCategoria.length > 0 && (

@@ -25,6 +25,7 @@ public class Transacao {
     private Long id;
     @Column(nullable = false)
     private double valor;
+    @Column(name = "date", nullable = false)
     private LocalDateTime date;
     private String descricao;
     @Enumerated(EnumType.STRING)

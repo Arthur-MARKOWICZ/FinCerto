@@ -167,12 +167,21 @@ public class RelatorioController {
             Usuario usuario = tokenService.obterUsuario(token.replace("Bearer ", ""));
             logger.info("Gerando relatório por categoria para usuário: {}", usuario.getId());
       
-            String url = construirUrl(
-                "relatorioPorCategoria",
-                usuario.getId(),
-                TIPO_PARAM, String.valueOf(tipo),
-                FORMATO_PARAM, formato
-            );
+            String url;
+            if (tipo != null) {
+                url = construirUrl(
+                    "relatorioPorCategoria",
+                    usuario.getId(),
+                    TIPO_PARAM, String.valueOf(tipo),
+                    FORMATO_PARAM, formato
+                );
+            } else {
+                url = construirUrl(
+                    "relatorioPorCategoria",
+                    usuario.getId(),
+                    FORMATO_PARAM, formato
+                );
+            }
             
             return executarRequisicaoRelatorio(url, "relatorio_categoria", formato);
             

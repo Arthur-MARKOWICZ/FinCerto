@@ -82,6 +82,11 @@ export const categoriaService = {
     const response = await api.get<Categoria>(`/categorias/nome/${nome}`);
     return response.data;
   },
+
+  listarTodas: async (): Promise<Categoria[]> => {
+    const response = await api.get<{content: Categoria[]}>('/categorias/usuario');
+    return response.data.content;
+  },
 };
 
 export default api;

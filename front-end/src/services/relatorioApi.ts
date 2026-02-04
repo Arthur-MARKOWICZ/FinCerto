@@ -62,8 +62,12 @@ export const relatorioService = {
   },
 
   // Relatório por categoria via Spring Boot (proxy para FastAPI)
-  obterRelatorioPorCategoria: async (dataInicio: string, dataFim: string): Promise<any> => {
-    const response = await api.get(`/relatorios/relatorioPorCategoria?dataInicio=${dataInicio}&dataFim=${dataFim}&formato=excel`, {
+  obterRelatorioPorCategoria: async (dataInicio: string, dataFim: string, categoriaId?: string): Promise<any> => {
+    let url = `/relatorios/relatorioPorCategoria?dataInicio=${dataInicio}&dataFim=${dataFim}&formato=excel`;
+    if (categoriaId) {
+      url += `&categoriaId=${categoriaId}`;
+    }
+    const response = await api.get(url, {
       responseType: 'blob'
     });
     return response.data;
