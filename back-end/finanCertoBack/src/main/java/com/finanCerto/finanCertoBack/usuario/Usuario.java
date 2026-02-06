@@ -39,6 +39,8 @@ public class Usuario  implements UserDetails {
         this.email = dto.email();
     }
 
+
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();

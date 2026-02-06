@@ -156,6 +156,10 @@ public class RelatorioController {
             @Parameter(description = "Tipo de transação: RECEITA, DESPESA ou null para todas")
             Tipo tipo,
             
+            @RequestParam(name = "categoriaId", required = false)
+            @Parameter(description = "ID da categoria específica (opcional)")
+            String categoriaId,
+            
             @RequestHeader("Authorization")
             @Parameter(description = "Token JWT no formato 'Bearer <token>'")
             String token) {
@@ -168,7 +172,16 @@ public class RelatorioController {
             logger.info("Gerando relatório por categoria para usuário: {}", usuario.getId());
       
             String url;
-            if (tipo != null) {
+            if (categoriaId != null) {
+               
+                url = construirUrl(
+                    "relatorioPorCategoria",
+                    usuario.getId(),
+                    "categoria_id", categoriaId,
+                    FORMATO_PARAM, formato
+                );
+            } else if (tipo != null) {
+               
                 url = construirUrl(
                     "relatorioPorCategoria",
                     usuario.getId(),
@@ -176,6 +189,7 @@ public class RelatorioController {
                     FORMATO_PARAM, formato
                 );
             } else {
+            
                 url = construirUrl(
                     "relatorioPorCategoria",
                     usuario.getId(),
