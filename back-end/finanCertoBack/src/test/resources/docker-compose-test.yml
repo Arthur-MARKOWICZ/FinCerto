@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  postgres-test:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: finanCerto_test
+    ports:
+      - "5433:5432"
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d finanCerto_test"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  financerto-java-test:
+    build: 
+      context: ../../
+      dockerfile: back-end/finanCertoBack/Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-test:5432/finanCerto_test
+      SPRING_DATASOURCE_USERNAME: test_user
+      SPRING_DATASOURCE_PASSWORD: test_password
+      JWT_SECRET: test-secret-key-for-integration-tests-must-be-at-least-256-bits
+      FASTAPI_BASE_URL: http://financerto-python-test:8001/api
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+      SPRING_FLYWAY_ENABLED: "false"
+    ports:
+      - "8081:8080"
+    networks:
+      - test-network
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 30s
+      retries: 10
+
+  financerto-python-test:
+    build:
+      context: ../../financerto-analytics
+      dockerfile: dockerfile
+    environment:
+      DATABASE_URL: postgres://test_user:test_password@postgres-test:5432/finanCerto_test
+    ports:
+      - "8002:8001"
+    networks:
+      - test-network
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/"]
+      interval: 10s
+      timeout: 30s
+      retries: 10
+
+networks:
+  test-network:
+    driver: bridge
