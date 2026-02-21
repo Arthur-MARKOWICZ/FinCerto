@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'back-end/FinanCertoBack/**'
+      - 'back-end/finanCertoBack/**'
       - 'back-end/financerto-analytics/**'
       - 'front-end/**'
   pull_request:
@@ -25,7 +25,7 @@ jobs:
       - name: Verificar mudanças no Java
         id: check_changes
         run: |
-          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep 'back-end/FinanCertoBack'; then
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep 'back-end/finanCertoBack'; then
             echo "java=true" >> $GITHUB_OUTPUT
           fi
 
@@ -39,7 +39,7 @@ jobs:
 
       - name: Executar Testes (Maven)
         if: steps.check_changes.outputs.java == 'true'
-        working-directory: ./back-end/FinanCertoBack
+        working-directory: ./back-end/finanCertoBack
         run: mvn test
 
   # --- JOB 2: PYTHON ---
