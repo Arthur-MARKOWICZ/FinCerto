@@ -1,0 +1,99 @@
+name: CI/CD Financerto Professional
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'back-end/FinanCertoBack/**'
+      - 'back-end/financerto-analytics/**'
+      - 'front-end/**'
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # --- JOB 1: JAVA ---
+  test-java:
+    runs-on: ubuntu-latest
+    # Adicionamos uma verificação mais robusta para mudanças na pasta
+    outputs:
+      changed: ${{ steps.check_changes.outputs.java }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Necessário para comparar versões
+
+      - name: Verificar mudanças no Java
+        id: check_changes
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep 'back-end/FinanCertoBack'; then
+            echo "java=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Configurar JDK 17
+        if: steps.check_changes.outputs.java == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Executar Testes (Maven)
+        if: steps.check_changes.outputs.java == 'true'
+        working-directory: ./back-end/FinanCertoBack
+        run: mvn test
+
+  # --- JOB 2: PYTHON ---
+  test-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      # Filtro simples: Só roda se houver mudança na pasta
+      - name: Verificar mudanças no Python
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            python:
+              - 'back-end/financerto-analytics/**'
+
+      - name: Configurar Python
+        if: steps.filter.outputs.python == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar e Testar
+        if: steps.filter.outputs.python == 'true'
+        working-directory: ./back-end/financerto-analytics
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+          pytest
+
+  # --- JOB 3: DEPLOY ---
+  deploy:
+    # Use 'always()' com condições para garantir que o deploy rode se os testes passarem OU forem pulados
+    needs: [test-python, test-java]
+    if: |
+      always() &&
+      github.ref == 'refs/heads/main' &&
+      (needs.test-python.result == 'success' || needs.test-python.result == 'skipped') &&
+      (needs.test-java.result == 'success' || needs.test-java.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy na Oracle Cloud via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USER }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          script: |
+            cd /home/opc/financerto
+            # O comando abaixo assume que você tem um docker-compose.yml na pasta
+            export DB_USERNAME=${{ secrets.DB_USERNAME }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            export JWT_SECRET=${{ secrets.JWT_SECRET }}
+            docker compose pull
+            docker compose up -d
+            echo "Deploy do Financerto finalizado!"

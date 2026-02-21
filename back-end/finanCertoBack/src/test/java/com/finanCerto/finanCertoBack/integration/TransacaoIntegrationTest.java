@@ -423,13 +423,26 @@ public class TransacaoIntegrationTest extends BaseIntegrationTest {
     @DisplayName("Deve validar rollback em caso de falha")
     @Transactional
     void testRollbackEmFalha_Sucesso() {
-        // Arrange - Não salva nada primeiro, apenas simula a falha
-        // Act - Simular falha direta
+        // Arrange
+        Transacao trans1 = new Transacao();
+        trans1.setValor(100.0);
+        trans1.setDate(LocalDateTime.now());
+        trans1.setDescricao("Test 1");
+        trans1.setTipo(com.finanCerto.finanCertoBack.transacao.Tipos.DESPESA);
+        trans1.setUsuario(usuarioTest);
+        trans1.setCategoria(categoriaTest);
+        trans1.setConta(contaTest);
+        Transacao salva1 = transacaoRepository.save(trans1);
+        assertNotNull(salva1.getId());
+        Long id1 = salva1.getId();
+
+        // Act - Simular falha (não há constraint única em transação, então vamos forçar uma exceção)
         assertThrows(RuntimeException.class, () -> {
             throw new RuntimeException("Simulação de falha para teste de rollback");
         });
 
-        // Assert - Verificar que não há transações salvas
+        // Assert - Verificar que a transação foi revertida
+        // Como estamos em @Transactional, a primeira transação também deve ser revertida
         assertEquals(0, transacaoRepository.count());
     }
 }

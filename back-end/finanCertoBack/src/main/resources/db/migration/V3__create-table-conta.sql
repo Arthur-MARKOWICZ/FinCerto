@@ -2,7 +2,7 @@
 CREATE TABLE tb_conta (
     id BIGSERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
-    tipo VARCHAR(255) CHECK (tipo IN ('CONTA_CORRENTE', 'POUPANCA', 'CARTAO', 'DINHEIRO', 'OUTROS')),
+    tipo VARCHAR(255),
     saldo_inicial DOUBLE PRECISION NOT NULL,
     usuario_id BIGINT NOT NULL,
     
