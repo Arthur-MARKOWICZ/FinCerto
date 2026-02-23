@@ -89,11 +89,44 @@ jobs:
           username: ${{ secrets.ORACLE_USER }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
           script: |
-            cd /home/opc/financerto
-            # O comando abaixo assume que você tem um docker-compose.yml na pasta
+            set -e
+            
+            # Diagnóstico: Verificar ambiente
+            echo "=== Diagnóstico do Environment ==="
+            whoami
+            pwd
+            echo "Docker version:"
+            docker --version || echo "Docker not found in PATH"
+            echo "Docker compose version:"
+            docker compose --version || docker-compose --version || echo "Docker compose not found"
+            echo ""
+            
+            # Tentar entrar no diretório
+            echo "=== Tentando acessar diretório ==="
+            if [ -d "/home/opc/financerto" ]; then
+              echo "Diretório /home/opc/financerto existe"
+              ls -la /home/opc/financerto || echo "Sem permissão de leitura"
+            else
+              echo "Diretório /home/opc/financerto NÃO existe. Criando..."
+              mkdir -p /home/opc/financerto
+            fi
+            
+            # Mudar para o diretório com tratamento de erro
+            echo "=== Entrando no diretório ==="
+            if ! cd /home/opc/financerto; then
+              echo "ERRO: Não foi possível entrar em /home/opc/financerto"
+              echo "Tentando com sudo..."
+              sudo -u opc bash -c "cd /home/opc/financerto && pwd" || exit 1
+            fi
+            
+            # Configurar variáveis de ambiente
             export DB_USERNAME=${{ secrets.DB_USERNAME }}
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             export JWT_SECRET=${{ secrets.JWT_SECRET }}
-            docker compose pull
-            docker compose up -d
-            echo "Deploy do Financerto finalizado!"
+            
+            # Deploy com docker compose
+            echo "=== Iniciando Deploy ==="
+            docker compose pull || docker-compose pull
+            docker compose up -d || docker-compose up -d
+            
+            echo "Deploy do Financerto finalizado com sucesso!"
