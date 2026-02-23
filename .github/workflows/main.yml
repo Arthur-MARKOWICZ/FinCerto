@@ -91,42 +91,73 @@ jobs:
           script: |
             set -e
             
-            # Diagnóstico: Verificar ambiente
-            echo "=== Diagnóstico do Environment ==="
-            whoami
-            pwd
-            echo "Docker version:"
-            docker --version || echo "Docker not found in PATH"
-            echo "Docker compose version:"
-            docker compose --version || docker-compose --version || echo "Docker compose not found"
+            echo "========== DIAGNÓSTICO DO DEPLOY =========="
+            echo "User: $(whoami)"
+            echo "Home: $HOME"
+            echo "PWD: $(pwd)"
             echo ""
             
-            # Tentar entrar no diretório
-            echo "=== Tentando acessar diretório ==="
-            if [ -d "/home/opc/financerto" ]; then
-              echo "Diretório /home/opc/financerto existe"
-              ls -la /home/opc/financerto || echo "Sem permissão de leitura"
+            # Verificar Docker
+            echo "=== Verificando Docker ==="
+            if command -v docker &> /dev/null; then
+              echo "✓ Docker encontrado: $(docker --version)"
             else
-              echo "Diretório /home/opc/financerto NÃO existe. Criando..."
-              mkdir -p /home/opc/financerto
+              echo "✗ CRÍTICO: Docker NÃO ESTÁ INSTALADO"
+              echo "  Action necessária: Instale Docker no Oracle Cloud"
+              exit 1
             fi
             
-            # Mudar para o diretório com tratamento de erro
-            echo "=== Entrando no diretório ==="
-            if ! cd /home/opc/financerto; then
-              echo "ERRO: Não foi possível entrar em /home/opc/financerto"
-              echo "Tentando com sudo..."
-              sudo -u opc bash -c "cd /home/opc/financerto && pwd" || exit 1
+            if command -v docker-compose &> /dev/null || docker compose --version &> /dev/null 2>&1; then
+              echo "✓ Docker Compose encontrado"
+            else
+              echo "✗ Docker Compose não encontrado"
+              exit 1
             fi
+            echo ""
+            
+            # Definir diretório de trabalho
+            DEPLOY_DIR="${HOME}/financerto"
+            echo "=== Criando/Verificando Diretório de Deploy ==="
+            echo "Diretório: $DEPLOY_DIR"
+            
+            if [ -d "$DEPLOY_DIR" ]; then
+              echo "✓ Diretório existe"
+            else
+              echo "  Criando diretório..."
+              mkdir -p "$DEPLOY_DIR"
+              echo "✓ Diretório criado"
+            fi
+            echo ""
+            
+            # Entrar no diretório
+            echo "=== Acessando Diretório ==="
+            cd "$DEPLOY_DIR"
+            echo "✓ Diretório atual: $(pwd)"
+            
+            # Verificar docker-compose.yml
+            if [ ! -f "docker-compose.yml" ]; then
+              echo "✗ ERRO: docker-compose.yml não encontrado em $DEPLOY_DIR"
+              echo "  Arquivos presentes:"
+              ls -la
+              exit 1
+            fi
+            echo "✓ docker-compose.yml encontrado"
+            echo ""
             
             # Configurar variáveis de ambiente
+            echo "=== Configurando Variáveis de Ambiente ==="
             export DB_USERNAME=${{ secrets.DB_USERNAME }}
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             export JWT_SECRET=${{ secrets.JWT_SECRET }}
+            echo "✓ Variáveis de ambiente configuradas"
+            echo ""
             
-            # Deploy com docker compose
-            echo "=== Iniciando Deploy ==="
-            docker compose pull || docker-compose pull
-            docker compose up -d || docker-compose up -d
+            # Deploy
+            echo "=== Iniciando Deploy com Docker Compose ==="
+            docker compose pull
+            docker compose up -d
             
-            echo "Deploy do Financerto finalizado com sucesso!"
+            echo ""
+            echo "========== ✓ DEPLOY FINALIZADO COM SUCESSO =========="
+            echo "Containers rodando:"
+            docker compose ps
