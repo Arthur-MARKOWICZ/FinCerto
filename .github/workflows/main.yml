@@ -168,10 +168,10 @@ jobs:
             
             # Deploy
             echo "=== Iniciando Deploy com Docker Compose ==="
-            docker compose pull
-            docker compose up -d
+            docker-compose pull
+            docker-compose up -d
             
             echo ""
             echo "========== ✓ DEPLOY FINALIZADO COM SUCESSO =========="
             echo "Containers rodando:"
-            docker compose ps
+            docker-compose ps
