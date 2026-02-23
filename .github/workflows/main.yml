@@ -29,11 +29,11 @@ jobs:
             echo "java=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Configurar JDK 17
+      - name: Configurar JDK 21
         if: steps.check_changes.outputs.java == 'true'
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
 
