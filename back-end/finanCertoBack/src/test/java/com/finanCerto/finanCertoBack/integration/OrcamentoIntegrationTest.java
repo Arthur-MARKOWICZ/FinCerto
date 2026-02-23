@@ -331,10 +331,10 @@ public class OrcamentoIntegrationTest extends BaseIntegrationTest {
         orcamento.setPrazo(LocalDate.now().plusMonths(1));
         orcamento.setCategoria(categoriaTest);
 
-        // Act & Assert - Verifica que o usuário é nulo antes de salvar
+        // Act & Assert
         assertNull(orcamento.getUsuario());
         
-        // Tenta salvar - H2 permite, mas verificamos comportamento esperado
+        // Tenta salvar
         assertDoesNotThrow(() -> orcamentoRepository.save(orcamento));
     }
 
