@@ -48,6 +48,5 @@ public class Transacao {
         this.date  = dto.data();
         this.categoria = categoria;
         this.conta = conta;
-
     }
 }
