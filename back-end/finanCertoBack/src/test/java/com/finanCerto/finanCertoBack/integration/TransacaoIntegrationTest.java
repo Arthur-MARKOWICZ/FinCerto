@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,6 +37,9 @@ public class TransacaoIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private ContaRepository contaRepository;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     private Usuario usuarioTest;
     private Categoria categoriaTest;
@@ -421,28 +425,31 @@ public class TransacaoIntegrationTest extends BaseIntegrationTest {
     @Test
     @Order(14)
     @DisplayName("Deve validar rollback em caso de falha")
-    @Transactional
     void testRollbackEmFalha_Sucesso() {
         // Arrange
-        Transacao trans1 = new Transacao();
-        trans1.setValor(100.0);
-        trans1.setDate(LocalDateTime.now());
-        trans1.setDescricao("Test 1");
-        trans1.setTipo(com.finanCerto.finanCertoBack.transacao.Tipos.DESPESA);
-        trans1.setUsuario(usuarioTest);
-        trans1.setCategoria(categoriaTest);
-        trans1.setConta(contaTest);
-        Transacao salva1 = transacaoRepository.save(trans1);
-        assertNotNull(salva1.getId());
-        Long id1 = salva1.getId();
+        long countBefore = transacaoRepository.count();
 
-        // Act - Simular falha (não há constraint única em transação, então vamos forçar uma exceção)
+        // Act & Assert - Simular falha dentro de transação que será revertida
         assertThrows(RuntimeException.class, () -> {
-            throw new RuntimeException("Simulação de falha para teste de rollback");
+            transactionTemplate.execute(status -> {
+                Transacao trans1 = new Transacao();
+                trans1.setValor(100.0);
+                trans1.setDate(LocalDateTime.now());
+                trans1.setDescricao("Test 1");
+                trans1.setTipo(com.finanCerto.finanCertoBack.transacao.Tipos.DESPESA);
+                trans1.setUsuario(usuarioTest);
+                trans1.setCategoria(categoriaTest);
+                trans1.setConta(contaTest);
+                Transacao salva1 = transacaoRepository.save(trans1);
+                assertNotNull(salva1.getId());
+
+                // Simular falha para forçar rollback
+                throw new RuntimeException("Simulação de falha para teste de rollback");
+            });
         });
 
-        // Assert - Verificar que a transação foi revertida
-        // Como estamos em @Transactional, a primeira transação também deve ser revertida
-        assertEquals(0, transacaoRepository.count());
+        // Assert - Verificar que a transação foi revertida (count deve ser igual ao antes)
+        long countAfter = transacaoRepository.count();
+        assertEquals(countBefore, countAfter, "Dados não foram revertidos após exceção");
     }
 }
