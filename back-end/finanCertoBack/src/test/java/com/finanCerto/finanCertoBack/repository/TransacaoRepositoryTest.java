@@ -8,11 +8,13 @@ import com.finanCerto.finanCertoBack.transacao.Transacao;
 import com.finanCerto.finanCertoBack.transacao.TransacaoRepository;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -20,6 +22,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
+@Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class TransacaoRepositoryTest {
 
@@ -29,7 +32,11 @@ class TransacaoRepositoryTest {
     @Autowired
     private EntityManager entityManager;
 
-    @Test
+    @BeforeEach
+    void setup() {
+        transacaoRepository.deleteAll();
+        entityManager.flush();
+    }    @Test
     @DisplayName("Deve salvar e recuperar transação")
     void deveSalvarERecuperar() {
         Usuario usuario = novoUsuario("Joao", "joao@test.com");

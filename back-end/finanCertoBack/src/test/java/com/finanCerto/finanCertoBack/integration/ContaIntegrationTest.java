@@ -3,6 +3,7 @@ package com.finanCerto.finanCertoBack.integration;
 import com.finanCerto.finanCertoBack.conta.*;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import com.finanCerto.finanCertoBack.usuario.UsuarioRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,19 +28,36 @@ public class ContaIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @Autowired
+    private EntityManager entityManager;
+
     private Usuario usuarioTest;
 
     @BeforeEach
     void setUp() {
-        contaRepository.deleteAll();
-        usuarioRepository.deleteAll();
+        // Limpar todos os dados antes de cada teste
+        try {
+            contaRepository.deleteAll();
+            usuarioRepository.deleteAll();
+            entityManager.flush();
+        } catch (Exception e) {
+            // Ignore cleanup errors
+        }
         
-        // Criar usuário de teste
+        // Criar usuário de teste com email único por tentativa
         usuarioTest = new Usuario();
         usuarioTest.setNome("Test User");
         usuarioTest.setEmail("test@example.com");
         usuarioTest.setSenha("password123");
-        usuarioTest = usuarioRepository.save(usuarioTest);
+        try {
+            usuarioTest = usuarioRepository.save(usuarioTest);
+        } catch (Exception e) {
+            // Se falhar, buscar o usuário existente
+            usuarioTest = usuarioRepository.findByEmail("test@example.com").orElse(null);
+            if (usuarioTest == null) {
+                throw new RuntimeException("Falha ao criar/encontrar usuário de teste");
+            }
+        }
     }
 
     @Test

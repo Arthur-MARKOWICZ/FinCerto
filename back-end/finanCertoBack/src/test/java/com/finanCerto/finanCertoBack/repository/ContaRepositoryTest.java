@@ -5,6 +5,7 @@ import com.finanCerto.finanCertoBack.conta.ContaRepository;
 import com.finanCerto.finanCertoBack.conta.Tipos;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,14 +13,14 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Transactional
 class ContaRepositoryTest {
 
     @Autowired
@@ -28,7 +29,11 @@ class ContaRepositoryTest {
     @Autowired
     private EntityManager entityManager;
 
-    @Test
+    @BeforeEach
+    void setup() {
+        contaRepository.deleteAll();
+        entityManager.flush();
+    }    @Test
     @DisplayName("Deve verificar existência de conta por usuário e nome")
     void deveVerificarExistenciaContaPorUsuarioAndNome() {
         Usuario usuario = novoUsuario("Pedro", "pedro@test.com");

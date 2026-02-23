@@ -3,6 +3,7 @@ package com.finanCerto.finanCertoBack.integration;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import com.finanCerto.finanCertoBack.usuario.UsuarioRepository;
 import com.finanCerto.finanCertoBack.usuario.dtos.UsuarioCadastroDto;
+import jakarta.persistence.EntityManager;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +28,15 @@ public class UsuarioIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
+    @Autowired
+    private EntityManager entityManager;
+
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @BeforeEach
     void setUp() {
         usuarioRepository.deleteAll();
+        entityManager.flush();
     }
 
     @Test

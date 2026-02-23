@@ -4,6 +4,7 @@ import com.finanCerto.finanCertoBack.categoria.*;
 import com.finanCerto.finanCertoBack.orcamento.*;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import com.finanCerto.finanCertoBack.usuario.UsuarioRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +32,9 @@ public class OrcamentoIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private CategoriaRepository categoriaRepository;
 
+    @Autowired
+    private EntityManager entityManager;
+
     private Usuario usuarioTest;
     private Categoria categoriaTest;
 
@@ -39,6 +43,7 @@ public class OrcamentoIntegrationTest extends BaseIntegrationTest {
         orcamentoRepository.deleteAll();
         categoriaRepository.deleteAll();
         usuarioRepository.deleteAll();
+        entityManager.flush();
         
         // Criar usuário de teste
         usuarioTest = new Usuario();

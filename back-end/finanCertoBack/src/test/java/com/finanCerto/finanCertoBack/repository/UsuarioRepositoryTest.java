@@ -3,18 +3,19 @@ package com.finanCerto.finanCertoBack.repository;
 import com.finanCerto.finanCertoBack.usuario.Usuario;
 import com.finanCerto.finanCertoBack.usuario.UsuarioRepository;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Transactional
 class UsuarioRepositoryTest {
 
     @Autowired
@@ -23,7 +24,11 @@ class UsuarioRepositoryTest {
     @Autowired
     private EntityManager entityManager;
 
-    @Test
+    @BeforeEach
+    void setup() {
+        usuarioRepository.deleteAll();
+        entityManager.flush();
+    }    @Test
     @DisplayName("Deve encontrar usuário por email")
     void deveEncontrarUsuarioPorEmail() {
         Usuario usuario = novoUsuario("João Silva", "joao.silva@test.com");
