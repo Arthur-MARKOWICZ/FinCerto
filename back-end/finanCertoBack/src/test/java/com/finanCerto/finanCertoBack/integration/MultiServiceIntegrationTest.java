@@ -155,7 +155,7 @@ public abstract class MultiServiceIntegrationTest {
                     return true;
                 }
             } catch (Exception e) {
-                // Aguarda e tenta novamente
+
             }
             
             try {
