@@ -129,9 +129,23 @@ jobs:
             fi
             echo ""
             
+            # Clone ou atualiza repositório
+            echo "=== Obtendo código do repositório ==="
+            if [ -d "$DEPLOY_DIR/.git" ]; then
+              echo "  Repositório já existe. Atualizando..."
+              cd "$DEPLOY_DIR"
+              git pull origin main
+            else
+              echo "  Clonando repositório..."
+              cd "$HOME"
+              git clone https://github.com/Arthur-MARKOWICZ/FinCerto.git financerto
+              cd "$DEPLOY_DIR"
+            fi
+            echo "✓ Repositório atualizado"
+            echo ""
+            
             # Entrar no diretório
             echo "=== Acessando Diretório ==="
-            cd "$DEPLOY_DIR"
             echo "✓ Diretório atual: $(pwd)"
             
             # Verificar docker-compose.yml
