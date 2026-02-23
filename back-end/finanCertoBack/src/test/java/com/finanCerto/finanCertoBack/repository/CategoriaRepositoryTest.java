@@ -10,14 +10,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@Transactional
 class CategoriaRepositoryTest {
 
     @Autowired
@@ -28,8 +26,25 @@ class CategoriaRepositoryTest {
 
     @BeforeEach
     void setup() {
-        categoriaRepository.deleteAll();
-        entityManager.flush();
+           try {
+            entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY FALSE").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE tb_transacao").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE tb_categoria").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE tb_conta").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE tb_usuario").executeUpdate();
+            entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate();
+            entityManager.flush();
+        } catch (Exception e) {
+           
+            try {
+                entityManager.createNativeQuery("DELETE FROM tb_transacao").executeUpdate();
+                entityManager.createNativeQuery("DELETE FROM tb_categoria").executeUpdate();
+                entityManager.createNativeQuery("DELETE FROM tb_usuario").executeUpdate();
+                entityManager.flush();
+            } catch (Exception ex) {
+                
+            }
+        }
     }    @Test
     @DisplayName("Deve verificar existência por usuário/nome e buscar por nome")
     void deveConsultarCategoria() {

@@ -35,29 +35,20 @@ public class ContaIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Limpar todos os dados antes de cada teste
-        try {
-            contaRepository.deleteAll();
-            usuarioRepository.deleteAll();
-            entityManager.flush();
-        } catch (Exception e) {
-            // Ignore cleanup errors
-        }
+        // Delete em ordem correta para evitar constraint violations
+        entityManager.createNativeQuery("DELETE FROM tb_transacao").executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM tb_categoria").executeUpdate();
+        contaRepository.deleteAll();
+        usuarioRepository.deleteAll();
+        entityManager.flush();
         
-        // Criar usuário de teste com email único por tentativa
+        // Criar usuário de teste
         usuarioTest = new Usuario();
         usuarioTest.setNome("Test User");
         usuarioTest.setEmail("test@example.com");
         usuarioTest.setSenha("password123");
-        try {
-            usuarioTest = usuarioRepository.save(usuarioTest);
-        } catch (Exception e) {
-            // Se falhar, buscar o usuário existente
-            usuarioTest = usuarioRepository.findByEmail("test@example.com").orElse(null);
-            if (usuarioTest == null) {
-                throw new RuntimeException("Falha ao criar/encontrar usuário de teste");
-            }
-        }
+        usuarioTest = usuarioRepository.save(usuarioTest);
+        entityManager.flush();
     }
 
     @Test

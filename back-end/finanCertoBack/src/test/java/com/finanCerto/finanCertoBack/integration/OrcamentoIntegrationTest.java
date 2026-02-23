@@ -40,24 +40,27 @@ public class OrcamentoIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        orcamentoRepository.deleteAll();
+       
+        entityManager.createNativeQuery("DELETE FROM tb_transacao").executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM tb_orcamento").executeUpdate();
         categoriaRepository.deleteAll();
+        entityManager.createNativeQuery("DELETE FROM tb_conta").executeUpdate();
         usuarioRepository.deleteAll();
+        orcamentoRepository.deleteAll();
         entityManager.flush();
         
-        // Criar usuário de teste
         usuarioTest = new Usuario();
         usuarioTest.setNome("Test User");
         usuarioTest.setEmail("test@example.com");
         usuarioTest.setSenha("password123");
         usuarioTest = usuarioRepository.save(usuarioTest);
-        
-        // Criar categoria de teste
+       
         categoriaTest = new Categoria();
         categoriaTest.setNome("Alimentação");
         categoriaTest.setTipo(Tipo.DESPESA);
         categoriaTest.setUsuario(usuarioTest);
         categoriaTest = categoriaRepository.save(categoriaTest);
+        entityManager.flush();
     }
 
     @Test

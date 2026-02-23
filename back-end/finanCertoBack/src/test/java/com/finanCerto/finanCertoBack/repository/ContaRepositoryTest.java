@@ -13,14 +13,12 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@Transactional
 class ContaRepositoryTest {
 
     @Autowired
@@ -31,8 +29,27 @@ class ContaRepositoryTest {
 
     @BeforeEach
     void setup() {
-        contaRepository.deleteAll();
-        entityManager.flush();
+      
+        try {
+            entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY FALSE").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE tb_transacao").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE tb_categoria").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE tb_conta").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE tb_usuario").executeUpdate();
+            entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate();
+            entityManager.flush();
+        } catch (Exception e) {
+           
+            try {
+                entityManager.createNativeQuery("DELETE FROM tb_transacao").executeUpdate();
+                entityManager.createNativeQuery("DELETE FROM tb_categoria").executeUpdate();
+                entityManager.createNativeQuery("DELETE FROM tb_conta").executeUpdate();
+                entityManager.createNativeQuery("DELETE FROM tb_usuario").executeUpdate();
+                entityManager.flush();
+            } catch (Exception ex) {
+              
+            }
+        }
     }    @Test
     @DisplayName("Deve verificar existência de conta por usuário e nome")
     void deveVerificarExistenciaContaPorUsuarioAndNome() {

@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -22,8 +21,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@Transactional
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class TransacaoRepositoryTest {
 
     @Autowired
@@ -34,8 +31,27 @@ class TransacaoRepositoryTest {
 
     @BeforeEach
     void setup() {
-        transacaoRepository.deleteAll();
-        entityManager.flush();
+       
+        try {
+            entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY FALSE").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE tb_transacao").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE tb_categoria").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE tb_conta").executeUpdate();
+            entityManager.createNativeQuery("TRUNCATE TABLE tb_usuario").executeUpdate();
+            entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate();
+            entityManager.flush();
+        } catch (Exception e) {
+           
+            try {
+                entityManager.createNativeQuery("DELETE FROM tb_transacao").executeUpdate();
+                entityManager.createNativeQuery("DELETE FROM tb_categoria").executeUpdate();
+                entityManager.createNativeQuery("DELETE FROM tb_conta").executeUpdate();
+                entityManager.createNativeQuery("DELETE FROM tb_usuario").executeUpdate();
+                entityManager.flush();
+            } catch (Exception ex) {
+               
+            }
+        }
     }    @Test
     @DisplayName("Deve salvar e recuperar transação")
     void deveSalvarERecuperar() {

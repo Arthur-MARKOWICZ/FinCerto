@@ -35,6 +35,11 @@ public class UsuarioIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // Delete em ordem correta para respeitar constraints
+        entityManager.createNativeQuery("DELETE FROM tb_transacao").executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM tb_orcamento").executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM tb_categoria").executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM tb_conta").executeUpdate();
         usuarioRepository.deleteAll();
         entityManager.flush();
     }
