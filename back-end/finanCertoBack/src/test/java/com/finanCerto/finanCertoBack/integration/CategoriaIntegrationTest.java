@@ -27,13 +27,13 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
 
     @BeforeAll
     void setUp() {
-        // Limpa dados usando EntityManager para respeitar constraints
+        // Limpa apenas categorias para evitar conflitos
         categoriaRepository.deleteAll();
-        usuarioRepository.deleteAll();
         
+        // Cria usuário com email único para este teste
         usuarioTest = new Usuario();
-        usuarioTest.setNome("Test User");
-        usuarioTest.setEmail("test@example.com");
+        usuarioTest.setNome("Test User Categoria");
+        usuarioTest.setEmail("categoria-test@example.com");
         usuarioTest.setSenha("password123");
         usuarioTest = usuarioRepository.save(usuarioTest);
     }
