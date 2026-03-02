@@ -7,6 +7,11 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: finanCerto
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
     networks:
@@ -22,6 +27,9 @@ services:
       FASTAPI_BASE_URL: http://financerto-fastapi:8001/api
     ports:
       - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - financerto-net
 

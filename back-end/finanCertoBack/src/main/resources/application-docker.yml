@@ -6,6 +6,11 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       initialization-fail-timeout: ${SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT:-1}
+    
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      max-lifetime: 1800000
 
   jpa:
     hibernate:
