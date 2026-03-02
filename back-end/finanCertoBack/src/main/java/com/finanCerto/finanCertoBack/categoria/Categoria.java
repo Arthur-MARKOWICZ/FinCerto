@@ -31,7 +31,8 @@ public class Categoria {
     private Tipo tipo;
 
     @ManyToOne
-    @JoinColumn(name = "usuario_id")
+    @JoinColumn(name = "usuario_id", nullable = false)
+    @NotNull
     private Usuario usuario;
 
     public Categoria(CategoriaCadastroDto dto) {

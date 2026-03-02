@@ -26,7 +26,7 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
 
     private Usuario usuarioTest;
 
-    @BeforeEach
+    @BeforeAll
     void setUp() {
         categoriaRepository.deleteAll();
         usuarioRepository.deleteAll();
@@ -38,10 +38,15 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
         usuarioTest = usuarioRepository.save(usuarioTest);
     }
 
+    @BeforeEach
+    void cleanUp() {
+        // Limpa apenas categorias entre testes, mantendo o usuário
+        categoriaRepository.deleteAll();
+    }
+
     @Test
     @Order(1)
     @DisplayName("Deve criar e persistir uma categoria com sucesso")
-    @Transactional
     void testCriarCategoria_Sucesso() {
         Categoria categoria = new Categoria();
         categoria.setNome("Alimentação");
@@ -59,7 +64,6 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
     @Test
     @Order(2)
     @DisplayName("Deve encontrar categoria por ID")
-    @Transactional
     void testBuscarCategoriaPorId_Sucesso() {
         Categoria categoria = new Categoria();
         categoria.setNome("Salário");
@@ -77,7 +81,6 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
     @Test
     @Order(3)
     @DisplayName("Deve listar categorias por usuário")
-    @Transactional
     void testListarCategoriasPorUsuario_Sucesso() {
         Categoria cat1 = new Categoria();
         cat1.setNome("Alimentação");
@@ -109,7 +112,6 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
     @Test
     @Order(4)
     @DisplayName("Deve verificar existência de categoria por usuário e nome")
-    @Transactional
     void testVerificarExistenciaCategoria_Sucesso() {
         Categoria categoria = new Categoria();
         categoria.setNome("Alimentação");
@@ -124,7 +126,6 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
     @Test
     @Order(5)
     @DisplayName("Deve falhar ao criar categoria com nome duplicado para mesmo usuário")
-    @Transactional
     void testCriarCategoria_NomeDuplicado_Falha() {
         Categoria cat1 = new Categoria();
         cat1.setNome("Alimentação");
@@ -143,7 +144,6 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
     @Test
     @Order(6)
     @DisplayName("Deve permitir categoria com mesmo nome para usuários diferentes")
-    @Transactional
     void testCriarCategoria_MesmoNomeUsuariosDiferentes_Sucesso() {
         Usuario usuario2 = new Usuario();
         usuario2.setNome("Another User");
@@ -172,43 +172,66 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
     @Test
     @Order(7)
     @DisplayName("Deve falhar ao criar categoria com nome nulo")
-    @Transactional
     void testCriarCategoria_NomeNulo_Falha() {
         Categoria categoria = new Categoria();
         categoria.setTipo(Tipo.DESPESA);
         categoria.setUsuario(usuarioTest);
+        // Não define o nome
 
-        assertThrows(Exception.class, () -> categoriaRepository.save(categoria));
+        Exception exception = assertThrows(Exception.class, () -> {
+            categoriaRepository.save(categoria);
+            categoriaRepository.flush(); // Força a validação e persistência
+        });
+        
+        assertNotNull(exception);
+        assertTrue(exception.getMessage().contains("nome") || 
+                  exception.getMessage().contains("Nome") ||
+                  exception.getMessage().contains("blank"));
     }
 
     @Test
     @Order(8)
     @DisplayName("Deve falhar ao criar categoria com tipo nulo")
-    @Transactional
     void testCriarCategoria_TipoNulo_Falha() {
         Categoria categoria = new Categoria();
         categoria.setNome("Test Categoria");
         categoria.setUsuario(usuarioTest);
+        // Não define o tipo
 
-        assertThrows(Exception.class, () -> categoriaRepository.save(categoria));
+        Exception exception = assertThrows(Exception.class, () -> {
+            categoriaRepository.save(categoria);
+            categoriaRepository.flush(); // Força a validação e persistência
+        });
+        
+        assertNotNull(exception);
+        assertTrue(exception.getMessage().contains("tipo") || 
+                  exception.getMessage().contains("Tipo") ||
+                  exception.getMessage().contains("null"));
     }
 
     @Test
     @Order(9)
     @DisplayName("Deve falhar ao criar categoria sem usuário")
-    @Transactional
     void testCriarCategoria_SemUsuario_Falha() {
         Categoria categoria = new Categoria();
         categoria.setNome("Test Categoria");
         categoria.setTipo(Tipo.DESPESA);
+        // Não define o usuário
 
-        assertThrows(Exception.class, () -> categoriaRepository.save(categoria));
+        Exception exception = assertThrows(Exception.class, () -> {
+            categoriaRepository.save(categoria);
+            categoriaRepository.flush(); // Força a validação e persistência
+        });
+        
+        assertNotNull(exception);
+        assertTrue(exception.getMessage().contains("usuario") || 
+                  exception.getMessage().contains("Usuario") ||
+                  exception.getMessage().contains("null"));
     }
 
     @Test
     @Order(10)
     @DisplayName("Deve atualizar categoria com sucesso")
-    @Transactional
     void testAtualizarCategoria_Sucesso() {
         Categoria categoria = new Categoria();
         categoria.setNome("Alimentação");
@@ -228,7 +251,6 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
     @Test
     @Order(11)
     @DisplayName("Deve deletar categoria com sucesso")
-    @Transactional
     void testDeletarCategoria_Sucesso() {
         Categoria categoria = new Categoria();
         categoria.setNome("Alimentação");
@@ -246,7 +268,6 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
     @Test
     @Order(12)
     @DisplayName("Deve validar relacionamento com usuário")
-    @Transactional
     void testRelacionamentoUsuario_Sucesso() {
         Categoria categoria = new Categoria();
         categoria.setNome("Alimentação");
@@ -266,7 +287,6 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
     @Test
     @Order(13)
     @DisplayName("Deve validar rollback em caso de falha")
-    @Transactional
     void testRollbackEmFalha_Sucesso() {
         Categoria cat1 = new Categoria();
         cat1.setNome("Alimentação");
