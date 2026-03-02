@@ -108,7 +108,6 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
         assertTrue(categorias.stream().anyMatch(c -> "Transporte".equals(c.getNome())));
         assertTrue(categorias.stream().anyMatch(c -> "Salário".equals(c.getNome())));
     }
-
     @Test
     @Order(4)
     @DisplayName("Deve verificar existência de categoria por usuário e nome")
