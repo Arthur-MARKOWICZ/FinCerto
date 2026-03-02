@@ -6,7 +6,6 @@ import com.finanCerto.finanCertoBack.usuario.UsuarioRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +27,7 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
 
     @BeforeAll
     void setUp() {
+        // Limpa dados usando EntityManager para respeitar constraints
         categoriaRepository.deleteAll();
         usuarioRepository.deleteAll();
         
@@ -216,11 +216,10 @@ public class CategoriaIntegrationTest extends BaseIntegrationTest {
         Categoria categoria = new Categoria();
         categoria.setNome("Test Categoria");
         categoria.setTipo(Tipo.DESPESA);
-        // Não define o usuário
 
         Exception exception = assertThrows(Exception.class, () -> {
             categoriaRepository.save(categoria);
-            categoriaRepository.flush(); // Força a validação e persistência
+            categoriaRepository.flush(); 
         });
         
         assertNotNull(exception);
