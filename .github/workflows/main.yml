@@ -167,9 +167,22 @@ jobs:
             echo ""
             
             # Deploy
+            echo "=== Limpando Ambiente Docker Anterior (Preservando Dados) ==="
+            # Para containers sem remover volumes de dados
+            docker-compose down --remove-orphans || true
+            docker-compose rm -f || true
+            
+            # Remove apenas imagens órfãs, mas preserva volumes com dados
+            docker system prune -f || true
+            docker image prune -f || true
+            
+            echo "✓ Ambiente Docker limpo (volumes preservados)"
+            echo ""
+            
             echo "=== Iniciando Deploy com Docker Compose ==="
-            docker-compose pull
-            docker-compose up -d
+            # Build sem cache apenas se necessário
+            docker-compose build
+            docker-compose up -d --force-recreate
             
             echo ""
             echo "========== ✓ DEPLOY FINALIZADO COM SUCESSO =========="
