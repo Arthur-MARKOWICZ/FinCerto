@@ -16,9 +16,13 @@ export type MainTabParamList = {
   Reports: undefined;
 };
 
+import { AccountWithBalance } from '../types/account';
+
 export type AccountsStackParamList = {
   AccountsList: undefined;
-  AccountDetail: { accountId: number };
+  // pass full account so detail screen can render name/type/balance without
+  // additional network request
+  AccountDetail: { account: AccountWithBalance };
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();

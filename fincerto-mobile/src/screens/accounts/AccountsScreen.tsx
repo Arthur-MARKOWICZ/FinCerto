@@ -9,21 +9,26 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, NavigationProp } from '@react-navigation/native';
 import { Account, AccountWithBalance } from '../../types';
 import { contaService } from '../../services';
+import { AccountsStackParamList } from '../../navigation/TabNavigator';
 import { Card } from '../../components/common/Card';
 import AccountForm from '../../components/forms/AccountForm';
 
 const AccountsScreen: React.FC = () => {
+  const navigation = useNavigation<NavigationProp<AccountsStackParamList>>();
+
   const [accounts, setAccounts] = useState<AccountWithBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
   const loadAccountsWithBalance = async () => {
+    console.log('🔄 loadAccountsWithBalance called');
     try {
       const accountsData = await contaService.listar();
+      console.log('📦 contas retornadas:', accountsData.length);
       const accountsWithBalance = await Promise.all(
         accountsData.map(async (account) => {
           if (account.id) {
@@ -40,6 +45,7 @@ const AccountsScreen: React.FC = () => {
       );
       setAccounts(accountsWithBalance);
     } catch (error) {
+      console.error('❌ Erro em loadAccountsWithBalance:', error);
       Alert.alert('Erro', 'Não foi possível carregar as contas');
     } finally {
       setLoading(false);
@@ -59,20 +65,24 @@ const AccountsScreen: React.FC = () => {
   };
 
   const renderAccount = ({ item }: { item: AccountWithBalance }) => (
-    <Card style={styles.accountCard}>
-      <View style={styles.accountHeader}>
-        <Text style={styles.accountName}>{item.nome}</Text>
-        <Text style={styles.accountType}>{item.tipos}</Text>
-      </View>
-      <Text style={styles.accountBalance}>
-        R$ {item.saldoAtual?.toFixed(2) || '0,00'}
-      </Text>
-      <View style={styles.accountFooter}>
-        <Text style={styles.lastUpdate}>
-          Saldo atualizado
+    <TouchableOpacity
+      onPress={() => navigation.navigate('AccountDetail', { account: item })}
+    >
+      <Card style={styles.accountCard}>
+        <View style={styles.accountHeader}>
+          <Text style={styles.accountName}>{item.nome}</Text>
+          <Text style={styles.accountType}>{item.tipos}</Text>
+        </View>
+        <Text style={styles.accountBalance}>
+          R$ {item.saldoAtual?.toFixed(2) || '0,00'}
         </Text>
-      </View>
-    </Card>
+        <View style={styles.accountFooter}>
+          <Text style={styles.lastUpdate}>
+            Saldo atualizado
+          </Text>
+        </View>
+      </Card>
+    </TouchableOpacity>
   );
 
   const getTotalBalance = () => {

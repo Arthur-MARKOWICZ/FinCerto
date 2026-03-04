@@ -29,6 +29,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ visible, onClose, onS
   const [contaSelecionada, setContaSelecionada] = useState('');
   const [categoriaSelecionada, setCategoriaSelecionada] = useState('');
   const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+  const [hora, setHora] = useState<string>(new Date().toISOString().split('T')[1].slice(0,5));
   const [isLoading, setIsLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
 
@@ -90,9 +91,20 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ visible, onClose, onS
         return;
       }
 
+    
+      const horaVal = hora && hora.trim() ? hora.trim() : '00:00';
+      const horaRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+      if (!horaRegex.test(horaVal)) {
+        Alert.alert('Erro', 'Hora inválida. Use o formato HH:MM (ex: 14:30)');
+        setIsLoading(false);
+        return;
+      }
+
+      const dateTimeString = `${data}T${horaVal}:00`;
+
       const dados: TransacaoCadastroDto = {
         valor: valorNum,
-        data,
+        data: dateTimeString,
         descricao,
         tipo,
         nomeConta: contaSelecionada,
@@ -120,6 +132,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ visible, onClose, onS
     setContaSelecionada('');
     setCategoriaSelecionada('');
     setData(new Date().toISOString().split('T')[0]);
+    setHora(new Date().toISOString().split('T')[1].slice(0,5));
     setLoadingData(true);
     onClose();
   };
@@ -215,6 +228,15 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ visible, onClose, onS
               value={data}
               onChangeText={setData}
               placeholder="YYYY-MM-DD"
+            />
+
+            <Text style={styles.label}>Hora</Text>
+            <TextInput
+              style={styles.input}
+              value={hora}
+              onChangeText={setHora}
+              placeholder="HH:MM"
+              keyboardType="numeric"
             />
 
             <Text style={styles.label}>Conta</Text>
