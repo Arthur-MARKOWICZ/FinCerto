@@ -27,10 +27,11 @@ const AccountDetailScreen: React.FC<Props> = ({ route }) => {
   const [loading, setLoading] = useState(true);
 
   const loadTransactions = async () => {
-    if (!account.id) return;
+    if (!account.nome) return;
     setLoading(true);
     try {
-      const all = await transacaoService.listarPorConta(account.id);
+      const page = await transacaoService.listarPorContaPaginado(account.nome, 0, 100);
+      const all: Transaction[] = page?.content || [];
       const sorted = all.sort((a, b) =>
         new Date(b.date || '').getTime() - new Date(a.date || '').getTime()
       );

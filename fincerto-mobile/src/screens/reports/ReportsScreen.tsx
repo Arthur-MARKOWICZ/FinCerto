@@ -24,12 +24,18 @@ const ReportsScreen: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [transactionsData, accountsData, categoriesData] = await Promise.all([
-        transacaoService.listar(),
+      // buscar contas e categorias, depois agregar transações por conta
+      const [accountsData, categoriesData] = await Promise.all([
         contaService.listar(),
         categoriaService.listar(),
       ]);
-      
+
+      const pages = await Promise.all(
+        accountsData.map((c: Account) => transacaoService.listarPorContaPaginado(c.nome, 0, 100))
+      );
+
+      const transactionsData = pages.flatMap((p: any) => p?.content || []);
+
       setTransactions(transactionsData);
       setAccounts(accountsData);
       setCategories(categoriesData);

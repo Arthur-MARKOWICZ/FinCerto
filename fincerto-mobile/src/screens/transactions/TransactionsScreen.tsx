@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Transaction } from '../../types';
-import { transacaoService } from '../../services';
+import { transacaoService, contaService } from '../../services';
 import { Card } from '../../components/common/Card';
 import TransactionForm from '../../components/forms/TransactionForm';
 
@@ -23,11 +23,17 @@ const TransactionsScreen: React.FC = () => {
 
   const loadTransactions = async () => {
     try {
-      const transactionsData = await transacaoService.listar();
-      setTransactions(transactionsData.sort((a, b) => 
-        new Date(b.date || '').getTime() - new Date(a.date || '').getTime()
-      ));
+      // backend fornece transacoes paginadas por nome de conta. agregamos
+      // transações de todas as contas do usuário.
+      const contas = await contaService.listar();
+      const pages = await Promise.all(
+        contas.map((c: any) => transacaoService.listarPorContaPaginado(c.nome, 0, 100))
+      );
+      const merged = pages.flatMap(p => p?.content || []);
+      merged.sort((a: Transaction, b: Transaction) => new Date(b.date || '').getTime() - new Date(a.date || '').getTime());
+      setTransactions(merged);
     } catch (error) {
+      console.error('Erro ao carregar transações:', error);
       Alert.alert('Erro', 'Não foi possível carregar as transações');
     } finally {
       setLoading(false);

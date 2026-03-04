@@ -1,19 +1,35 @@
 import { TransacaoCadastroDto, Transaction } from '../types/transaction';
 import api from './api';
 
+/**
+ * transacaoController endpoints (back-end):
+ * - POST /api/transacao
+ * - GET  /api/transacao/conta/{nomeConta}/paginado?pagina=&tamanho=
+ * - GET  /api/transacao/categoria/{nomeCategoria}/paginado?pagina=&tamanho=
+ * - GET  /api/transacao/{id}
+ */
+
 export const transacaoService = {
   criar: async (dados: TransacaoCadastroDto): Promise<Transaction> => {
     const response = await api.post<Transaction>('/transacao', dados);
     return response.data;
   },
 
-  listar: async (): Promise<Transaction[]> => {
-    const response = await api.get<{ content: Transaction[] }>('/transacao?pagina=0&tamanho=10');
-    return response.data.content || [];
+  // retorna a página completa (Page<Transacao>) conforme backend
+  listarPorContaPaginado: async (nomeConta: string, pagina = 0, tamanho = 10): Promise<any> => {
+    const encoded = encodeURIComponent(nomeConta);
+    const response = await api.get(`/transacao/conta/${encoded}/paginado?pagina=${pagina}&tamanho=${tamanho}`);
+    return response.data;
   },
 
-  listarPorConta: async (contaId: number): Promise<Transaction[]> => {
-    const response = await api.get<Transaction[]>(`/transacao/conta/${contaId}`);
+  listarPorCategoriaPaginado: async (nomeCategoria: string, pagina = 0, tamanho = 10): Promise<any> => {
+    const encoded = encodeURIComponent(nomeCategoria);
+    const response = await api.get(`/transacao/categoria/${encoded}/paginado?pagina=${pagina}&tamanho=${tamanho}`);
+    return response.data;
+  },
+
+  obterPorId: async (id: number): Promise<Transaction> => {
+    const response = await api.get<Transaction>(`/transacao/${id}`);
     return response.data;
   },
 
