@@ -1,4 +1,4 @@
-name: CI/CD Financerto Professional
+ name: CI/CD Financerto Professional
 
 on:
   push:

@@ -1,7 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:5432/finanCerto
-
+    url: jdbc:postgresql://localhost:5432/finanCerto
     username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME:postgres}}
     password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD}}
     driver-class-name: org.postgresql.Driver
