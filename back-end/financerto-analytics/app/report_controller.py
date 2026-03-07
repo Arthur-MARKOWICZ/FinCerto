@@ -1,173 +1,192 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+"""
+Controller de relatórios — organiza as rotas da API de geração de relatórios.
+
+Utiliza APIRouter para agrupar endpoints por domínio (/reports).
+Todas as rotas são protegidas por JWT e utilizam Dependency Injection
+para acesso ao banco de dados.
+"""
+
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from typing import Optional
-from .database import SessionLocal
+
+from .auth import get_current_user_id
+from .database import get_db
+from .report_repository import ReportRepository
 from .report_service import ReportService
 
 router = APIRouter()
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
-class ReportController:
-    def __init__(self, db: Session = Depends(get_db)):
-        self.db = db
-        from .report_repository import ReportRepository
-        self.report_service = ReportService(ReportRepository(db))
+def _get_report_service(db: Session = Depends(get_db)) -> ReportService:
+    """
+    Factory que cria uma instância de ReportService com suas dependências.
 
-    async def gerar_relatorio(
-        self,
-        usuario_id: int,
-        categoria_id: Optional[int] = None,
-        tipo: Optional[str] = None,
-        periodo: Optional[str] = None,
-        formato: str = "excel"
-    ):
-        try:
-            buffer, mime, filename = await self.report_service.gerar_relatorio_por_categoria(
-                usuario_id=usuario_id,
-                categoria_id=categoria_id,
-                tipo=tipo,
-                periodo=periodo,
-                formato=formato
-            )
-            return StreamingResponse(
-                buffer,
-                media_type=mime,
-                headers={"Content-Disposition": f"attachment; filename={filename}"}
-            )
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
-    # Adicione este método DENTRO da classe ReportController
-    async def gerar_relatorio_saldo_mensal(
-        self,
-        usuario_id: int,
-        ano: Optional[int] = None,
-        conta_id: Optional[int] = None,
-        formato: str = "excel"
-    ):
-        """
-        Gera um relatório de saldo mensal mostrando receitas, despesas e saldo por mês.
-        
-        Args:
-            usuario_id: ID do usuário
-            ano: Ano para filtrar (opcional)
-            conta_id: ID da conta bancária (opcional)
-            formato: Formato do relatório (excel ou pdf)
-        """
-        try:
-            buffer, mime, filename = await self.report_service.gerar_relatorio(
-                report_type='saldo_mensal',
-                format_type=formato,
-                usuario_id=usuario_id,
-                ano=ano,
-                conta_id=conta_id
-            )
-            return StreamingResponse(
-                buffer,
-                media_type=mime,
-                headers={"Content-Disposition": f"attachment; filename={filename}"}
-            )
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
-    async def gerar_relatorio_transacao_detalhado(
-        self,
-        usuario_id: int,
-        conta_id:  Optional[int] = None,
-        categoria_id: Optional[int] = None,
-        data_inicio:  Optional[int] = None,
-        data_fim: Optional[int] = None,
-        valor_minimo:  Optional[int] = None,
-        valor_maximo:  Optional[int] = None,
-        tipo_transacao: Optional[str] = None,
-        formato: str = "excel"):
+    Args:
+        db: Sessão do banco de dados injetada via Depends.
 
-        try:
-            buffer, mime, filename = await self.report_service.gerar_relatorio(
-                report_type='transacoes_detalhadas',
-                format_type=formato,
-                usuario_id=usuario_id,
-                conta_id=conta_id,
-                categoria_id=categoria_id,
-                data_inicio=data_inicio,
-                data_fim=data_fim,
-                valor_minimo=valor_minimo,
-                valor_maximo=valor_maximo,
-                tipo_transacao=tipo_transacao
-            )
-            return StreamingResponse(
-                buffer,
-                media_type=mime,
-                headers={"Content-Disposition": f"attachment; filename={filename}"}
-            )
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
-def get_report_controller(db: Session = Depends(get_db)) -> ReportController:
-    return ReportController(db)
+    Returns:
+        Instância configurada do ReportService.
+    """
+    repository = ReportRepository(db)
+    return ReportService(repository)
 
 
 @router.get("/relatorioPorCategoria")
-async def gerar_relatorio(
-    usuario_id: int,
-    categoria_id: Optional[int] = Query(None),
-    tipo: Optional[str] = Query(None),
-    periodo: Optional[str] = Query(None),
-    formato: str = Query("excel"),
-    controller: ReportController = Depends(get_report_controller)
-):
-    return await controller.gerar_relatorio(
-        usuario_id=usuario_id,
-        categoria_id=categoria_id,
-        tipo=tipo,
-        periodo=periodo,
-        formato=formato
-    )
+async def gerar_relatorio_por_categoria(
+    categoria_id: Optional[int] = Query(None, description="ID da categoria"),
+    tipo: Optional[str] = Query(None, description="Tipo: RECEITA ou DESPESA"),
+    periodo: Optional[str] = Query(None, description="Período: mensal ou anual"),
+    formato: str = Query("excel", description="Formato: excel ou pdf"),
+    usuario_id: int = Depends(get_current_user_id),
+    service: ReportService = Depends(_get_report_service),
+) -> StreamingResponse:
+    """
+    Gera relatório de transações filtrado por categoria.
+
+    O usuario_id é extraído automaticamente do token JWT.
+
+    Args:
+        categoria_id: ID da categoria para filtrar (opcional).
+        tipo: Tipo de transação (opcional).
+        periodo: Período temporal (opcional).
+        formato: Formato de saída — 'excel' ou 'pdf'.
+        usuario_id: ID do usuário autenticado (extraído do JWT).
+        service: Instância do ReportService (injeção de dependência).
+
+    Returns:
+        StreamingResponse com o arquivo do relatório.
+
+    Raises:
+        HTTPException 400: Se ocorrer erro na geração do relatório.
+    """
+    try:
+        buffer, mime, filename = await service.gerar_relatorio_por_categoria(
+            usuario_id=usuario_id,
+            categoria_id=categoria_id,
+            tipo=tipo,
+            periodo=periodo,
+            formato=formato,
+        )
+        return StreamingResponse(
+            buffer,
+            media_type=mime,
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/relatorioSaldoMensal")
 async def relatorio_saldo_mensal(
-    usuario_id: int,
     ano: Optional[int] = Query(None, description="Ano para filtrar (opcional)"),
-    conta_id: Optional[int] = Query(None, description="ID da conta bancária (opcional)"),
-    formato: str = Query("excel", description="Formato do relatório (excel ou pdf)"),
-    controller: ReportController = Depends(get_report_controller)
-):
+    conta_id: Optional[int] = Query(
+        None, description="ID da conta bancária (opcional)"
+    ),
+    formato: str = Query("excel", description="Formato: excel ou pdf"),
+    usuario_id: int = Depends(get_current_user_id),
+    service: ReportService = Depends(_get_report_service),
+) -> StreamingResponse:
     """
-    Gera um relatório de saldo mensal mostrando receitas, despesas e saldo por mês.
-    Filtros opcionais por ano e conta bancária.
+    Gera relatório de saldo mensal com receitas, despesas e saldo por mês.
+
+    Args:
+        ano: Ano para filtrar (opcional).
+        conta_id: ID da conta bancária (opcional).
+        formato: Formato de saída — 'excel' ou 'pdf'.
+        usuario_id: ID do usuário autenticado (extraído do JWT).
+        service: Instância do ReportService (injeção de dependência).
+
+    Returns:
+        StreamingResponse com o arquivo do relatório.
+
+    Raises:
+        HTTPException 400: Se ocorrer erro na geração do relatório.
     """
-    return await controller.gerar_relatorio_saldo_mensal(
-        usuario_id=usuario_id,
-        ano=ano,
-        conta_id=conta_id,
-        formato=formato
-    )
+    try:
+        buffer, mime, filename = await service.gerar_relatorio(
+            report_type="saldo_mensal",
+            format_type=formato,
+            usuario_id=usuario_id,
+            ano=ano,
+            conta_id=conta_id,
+        )
+        return StreamingResponse(
+            buffer,
+            media_type=mime,
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.get("/relatorioTransacaoDetalhado")
 async def relatorio_transacao_detalhado(
-    usuario_id: int,
-    conta_id: Optional[int] = Query(None, description="ID da conta bancária (opcional)"),
-    categoria_id: Optional[int] = Query(None, description="ID da categoria (opcional)"),
-    data_inicio: Optional[str] = Query(None, description="Data de início (opcional)"),
-    data_fim: Optional[str] = Query(None, description="Data de fim (opcional)"),
-    valor_minimo: Optional[float] = Query(None, description="Valor mínimo (opcional)"),
-    valor_maximo: Optional[float] = Query(None, description="Valor máximo (opcional)"),
-    tipo_transacao: Optional[str] = Query(None, description="Tipo de transação (opcional)"),
-    formato: str = Query("excel", description="Formato do relatório (excel ou pdf)"),
-    controller: ReportController = Depends(get_report_controller)
-):
-    return await controller.gerar_relatorio_transacao_detalhado(
-        usuario_id=usuario_id,
-        conta_id=conta_id,
-        categoria_id=categoria_id,
-        data_inicio=data_inicio,
-        data_fim=data_fim,
-        valor_minimo=valor_minimo,
-        valor_maximo=valor_maximo,
-        tipo_transacao=tipo_transacao,
-        formato=formato
-    )
+    conta_id: Optional[int] = Query(
+        None, description="ID da conta bancária (opcional)"
+    ),
+    categoria_id: Optional[int] = Query(
+        None, description="ID da categoria (opcional)"
+    ),
+    data_inicio: Optional[str] = Query(
+        None, description="Data de início YYYY-MM-DD (opcional)"
+    ),
+    data_fim: Optional[str] = Query(
+        None, description="Data de fim YYYY-MM-DD (opcional)"
+    ),
+    valor_minimo: Optional[float] = Query(
+        None, description="Valor mínimo (opcional)"
+    ),
+    valor_maximo: Optional[float] = Query(
+        None, description="Valor máximo (opcional)"
+    ),
+    tipo_transacao: Optional[str] = Query(
+        None, description="Tipo: RECEITA ou DESPESA (opcional)"
+    ),
+    formato: str = Query("excel", description="Formato: excel ou pdf"),
+    usuario_id: int = Depends(get_current_user_id),
+    service: ReportService = Depends(_get_report_service),
+) -> StreamingResponse:
+    """
+    Gera relatório detalhado de transações com filtros avançados.
+
+    Args:
+        conta_id: ID da conta bancária (opcional).
+        categoria_id: ID da categoria (opcional).
+        data_inicio: Data de início no formato YYYY-MM-DD (opcional).
+        data_fim: Data de fim no formato YYYY-MM-DD (opcional).
+        valor_minimo: Valor mínimo para filtrar (opcional).
+        valor_maximo: Valor máximo para filtrar (opcional).
+        tipo_transacao: Tipo de transação (opcional).
+        formato: Formato de saída — 'excel' ou 'pdf'.
+        usuario_id: ID do usuário autenticado (extraído do JWT).
+        service: Instância do ReportService (injeção de dependência).
+
+    Returns:
+        StreamingResponse com o arquivo do relatório.
+
+    Raises:
+        HTTPException 400: Se ocorrer erro na geração do relatório.
+    """
+    try:
+        buffer, mime, filename = await service.gerar_relatorio(
+            report_type="transacoes_detalhadas",
+            format_type=formato,
+            usuario_id=usuario_id,
+            conta_id=conta_id,
+            categoria_id=categoria_id,
+            data_inicio=data_inicio,
+            data_fim=data_fim,
+            valor_minimo=valor_minimo,
+            valor_maximo=valor_maximo,
+            tipo_transacao=tipo_transacao,
+        )
+        return StreamingResponse(
+            buffer,
+            media_type=mime,
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
