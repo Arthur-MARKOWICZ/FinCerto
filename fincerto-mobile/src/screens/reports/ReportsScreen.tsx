@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,191 +8,145 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Transaction, Account, Category } from '../../types';
-import { transacaoService, contaService, categoriaService } from '../../services';
+import { Category } from '../../types';
+import { categoriaService, relatorioService } from '../../services';
+import { Buffer } from 'buffer';
+import { Picker } from '@react-native-picker/picker';
 import { Card } from '../../components/common/Card';
 
+// Módulos nativos apenas para mobile
+const RNFS = Platform.OS === 'web' ? null : require('react-native-fs');
+const FileViewer = Platform.OS === 'web' ? null : require('react-native-file-viewer');
+
 const ReportsScreen: React.FC = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'year'>('month');
+  const [downloadLoading, setDownloadLoading] = useState(false);
 
-  const loadData = async () => {
-    try {
-      // buscar contas e categorias, depois agregar transações por conta
-      const [accountsData, categoriesData] = await Promise.all([
-        contaService.listar(),
-        categoriaService.listar(),
-      ]);
-
-      const pages = await Promise.all(
-        accountsData.map((c: Account) => transacaoService.listarPorContaPaginado(c.nome, 0, 100))
-      );
-
-      const transactionsData = pages.flatMap((p: any) => p?.content || []);
-
-      setTransactions(transactionsData);
-      setAccounts(accountsData);
-      setCategories(categoriesData);
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível carregar os dados para os relatórios');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
 
   useFocusEffect(
     React.useCallback(() => {
-      loadData();
+      // fetch categories if needed for report parameters
+      categoriaService.listar().then(setCategories).catch(() => {});
+      setLoading(false);
     }, [])
   );
 
   const onRefresh = () => {
     setRefreshing(true);
-    loadData();
+    categoriaService.listar().then(setCategories).catch(() => {}).finally(() => setRefreshing(false));
   };
 
-  const getFilteredTransactions = () => {
-    const now = new Date();
-    const filtered = transactions.filter(t => {
-      if (!t.date) return false;
-      const transactionDate = new Date(t.date);
-      
-      if (selectedPeriod === 'month') {
-        return transactionDate.getMonth() === now.getMonth() &&
-               transactionDate.getFullYear() === now.getFullYear();
-      } else {
-        return transactionDate.getFullYear() === now.getFullYear();
-      }
-    });
-    
-    return filtered.sort((a, b) => new Date(b.date || '').getTime() - new Date(a.date || '').getTime());
+  // warn user if there are no categories to filter by
+  React.useEffect(() => {
+    if (!loading && categories.length === 0) {
+      Alert.alert('Nenhuma categoria', 'Não há categorias cadastradas. Relatórios por categoria podem ser gerados para todas as categorias ou após criar alguma.');
+    }
+    // if we obtained categories and user hasn't picked one yet, keep '' (Todas)
+    if (categories.length > 0 && selectedCategoryId === '') {
+      // nothing to change, still '' represents all
+    }
+  }, [loading, categories]);
+
+
+
+
+
+
+
+
+  const formatDate = (d: Date) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   };
 
-  const getTransactionsByCategory = () => {
-    const filtered = getFilteredTransactions();
-    const byCategory: { [key: string]: { amount: number; count: number; type: string } } = {};
-    
-    filtered.forEach(t => {
-      const categoryName = t.categoria?.nome || 'Sem categoria';
-      if (!byCategory[categoryName]) {
-        byCategory[categoryName] = { amount: 0, count: 0, type: t.tipo };
-      }
-      byCategory[categoryName].amount += t.valor;
-      byCategory[categoryName].count += 1;
-    });
-    
-    return Object.entries(byCategory)
-      .sort(([, a], [, b]) => b.amount - a.amount)
-      .slice(0, 10);
+  const saveAndOpenArrayBuffer = async (arrayBuffer: any, filename: string) => {
+    if (Platform.OS === 'web') {
+      Alert.alert('Não suportado', 'Downloads não estão disponíveis no web. Use a aplicação mobile para baixar relatórios.');
+      return;
+    }
+
+    try {
+      const uint8 = new Uint8Array(arrayBuffer);
+      const base64 = Buffer.from(uint8).toString('base64');
+      const tmpDir = RNFS.TemporaryDirectoryPath || RNFS.CachesDirectoryPath || RNFS.DocumentDirectoryPath;
+      const path = `${tmpDir}/${filename}`;
+      await RNFS.writeFile(path, base64, 'base64');
+      await FileViewer.open(path, { showOpenWithDialog: true });
+    } catch (err) {
+      throw err;
+    }
   };
 
-  const getTransactionsByAccount = () => {
-    const filtered = getFilteredTransactions();
-    const byAccount: { [key: string]: { amount: number; count: number } } = {};
-    
-    filtered.forEach(t => {
-      const accountName = t.conta?.nome || 'Sem conta';
-      if (!byAccount[accountName]) {
-        byAccount[accountName] = { amount: 0, count: 0 };
-      }
-      byAccount[accountName].amount += t.valor;
-      byAccount[accountName].count += 1;
-    });
-    
-    return Object.entries(byAccount)
-      .sort(([, a], [, b]) => b.amount - a.amount);
+
+  // download optionally filtered by categoryId (string or undefined)
+  const downloadPorCategoria = async (categoriaId?: string) => {
+    setDownloadLoading(true);
+    try {
+      const arrayBuffer = await relatorioService.obterRelatorioPorCategoria({ formato: 'pdf', categoriaId });
+      const filename = `relatorio_categoria_${categoriaId || 'geral'}.pdf`;
+      await saveAndOpenArrayBuffer(arrayBuffer, filename);
+    } catch (error: any) {
+      console.error('downloadPorCategoria error', error);
+      const msg = error.response?.data?.message || error.message || '';
+      Alert.alert('Erro', `Não foi possível baixar/abrir o relatório por categoria. ${msg}`);
+    } finally {
+      setDownloadLoading(false);
+    }
   };
 
-  const getSummary = () => {
-    const filtered = getFilteredTransactions();
-    const receitas = filtered.filter(t => t.tipo === 'RECEITA').reduce((sum, t) => sum + t.valor, 0);
-    const despesas = filtered.filter(t => t.tipo === 'DESPESA').reduce((sum, t) => sum + t.valor, 0);
-    const saldo = receitas - despesas;
-    
-    return { receitas, despesas, saldo, count: filtered.length };
+  const handleDownloadMensal = async () => {
+    setDownloadLoading(true);
+    try {
+      const ano = new Date().getFullYear();
+      const arrayBuffer = await relatorioService.obterRelatorioMensal(ano, 'pdf');
+      const filename = `relatorio_mensal_${ano}.pdf`;
+      await saveAndOpenArrayBuffer(arrayBuffer, filename);
+    } catch (error: any) {
+      console.error('handleDownloadMensal error', error);
+      const msg = error.response?.data?.message || error.message || '';
+      Alert.alert('Erro', `Não foi possível baixar/abrir o relatório mensal. ${msg}`);
+    } finally {
+      setDownloadLoading(false);
+    }
   };
 
-  const renderSummaryCard = () => {
-    const summary = getSummary();
-    return (
-      <Card style={styles.summaryCard}>
-        <Text style={styles.cardTitle}>Resumo do {selectedPeriod === 'month' ? 'Mês' : 'Ano'}</Text>
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Receitas</Text>
-            <Text style={styles.summaryValuePositive}>+R$ {summary.receitas.toFixed(2)}</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Despesas</Text>
-            <Text style={styles.summaryValueNegative}>-R$ {summary.despesas.toFixed(2)}</Text>
-          </View>
-        </View>
-        <View style={styles.balanceRow}>
-          <Text style={styles.balanceLabel}>Saldo</Text>
-          <Text style={[
-            styles.balanceValue,
-            summary.saldo >= 0 ? styles.balancePositive : styles.balanceNegative
-          ]}>
-            R$ {summary.saldo.toFixed(2)}
-          </Text>
-        </View>
-        <Text style={styles.transactionCount}>{summary.count} transações</Text>
-      </Card>
-    );
+  const handleDownloadPeriodo = async () => {
+    setDownloadLoading(true);
+    try {
+      const now = new Date();
+      const inicio = new Date(now);
+      inicio.setDate(now.getDate() - 30);
+      const dataInicio = formatDate(inicio);
+      const dataFim = formatDate(now);
+      const arrayBuffer = await relatorioService.obterRelatorioPeriodo(dataInicio, dataFim, 'pdf');
+      const filename = `relatorio_periodo_${dataInicio}_to_${dataFim}.pdf`;
+      await saveAndOpenArrayBuffer(arrayBuffer, filename);
+    } catch (error: any) {
+      console.error('handleDownloadPeriodo error', error);
+      const msg = error.response?.data?.message || error.message || '';
+      Alert.alert('Erro', `Não foi possível baixar/abrir o relatório do período. ${msg}`);
+    } finally {
+      setDownloadLoading(false);
+    }
   };
 
-  const renderTopCategories = () => {
-    const byCategory = getTransactionsByCategory();
-    return (
-      <Card style={styles.card}>
-        <Text style={styles.cardTitle}>Top Categorias</Text>
-        {byCategory.length === 0 ? (
-          <Text style={styles.emptyText}>Nenhuma transação no período</Text>
-        ) : (
-          byCategory.map(([name, data], index) => (
-            <View key={name} style={styles.categoryRow}>
-              <Text style={styles.categoryRank}>#{index + 1}</Text>
-              <Text style={styles.categoryName}>{name}</Text>
-              <Text style={[
-                styles.categoryAmount,
-                data.type === 'RECEITA' ? styles.amountPositive : styles.amountNegative
-              ]}>
-                {data.type === 'RECEITA' ? '+' : '-'}R$ {data.amount.toFixed(2)}
-              </Text>
-            </View>
-          ))
-        )}
-      </Card>
-    );
-  };
-
-  const renderAccountSummary = () => {
-    const byAccount = getTransactionsByAccount();
-    return (
-      <Card style={styles.card}>
-        <Text style={styles.cardTitle}>Resumo por Conta</Text>
-        {byAccount.length === 0 ? (
-          <Text style={styles.emptyText}>Nenhuma transação no período</Text>
-        ) : (
-          byAccount.map(([name, data]) => (
-            <View key={name} style={styles.accountRow}>
-              <Text style={styles.accountName}>{name}</Text>
-              <View style={styles.accountDetails}>
-                <Text style={styles.accountAmount}>R$ {data.amount.toFixed(2)}</Text>
-                <Text style={styles.accountCount}>{data.count} transações</Text>
-              </View>
-            </View>
-          ))
-        )}
-      </Card>
-    );
+  const requestOnlyPorCategoria = async (categoriaId?: string) => {
+    try {
+      await relatorioService.obterRelatorioPorCategoria({ formato: 'pdf', categoriaId });
+      Alert.alert('Sucesso', 'Relatório solicitado com sucesso (recebido)');
+    } catch (error: any) {
+      console.error('requestOnlyPorCategoria error', error);
+      const msg = error.response?.data?.message || error.message || '';
+      Alert.alert('Erro', `Falha ao solicitar o relatório. ${msg}`);
+    }
   };
 
   if (loading) {
@@ -208,36 +162,6 @@ const ReportsScreen: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Relatórios</Text>
-        <View style={styles.periodSelector}>
-          <TouchableOpacity
-            style={[
-              styles.periodButton,
-              selectedPeriod === 'month' && styles.periodButtonActive
-            ]}
-            onPress={() => setSelectedPeriod('month')}
-          >
-            <Text style={[
-              styles.periodButtonText,
-              selectedPeriod === 'month' && styles.periodButtonTextActive
-            ]}>
-              Mês
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.periodButton,
-              selectedPeriod === 'year' && styles.periodButtonActive
-            ]}
-            onPress={() => setSelectedPeriod('year')}
-          >
-            <Text style={[
-              styles.periodButtonText,
-              selectedPeriod === 'year' && styles.periodButtonTextActive
-            ]}>
-              Ano
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       <ScrollView
@@ -247,9 +171,58 @@ const ReportsScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        {renderSummaryCard()}
-        {renderTopCategories()}
-        {renderAccountSummary()}
+        <Card style={styles.card}>
+          <Text style={styles.cardTitle}>Exportar / Baixar Relatórios</Text>
+          <View style={{ marginBottom: 8 }}>
+            <Text style={{ marginBottom: 4 }}>Categoria</Text>
+            <Picker
+              selectedValue={selectedCategoryId}
+              onValueChange={(v: React.SetStateAction<string>) => setSelectedCategoryId(v)}
+              style={{ height: 40, width: '100%' }}
+            >
+              <Picker.Item label="Todas" value="" />
+              {categories.map(c => (
+                <Picker.Item key={c.id} label={c.nome} value={c.id || ''} />
+              ))}
+            </Picker>
+          </View>
+          <View style={{ marginBottom: 8 }}>
+            <TouchableOpacity
+              style={[styles.downloadButton]}
+              onPress={() => downloadPorCategoria(selectedCategoryId || undefined)}
+              disabled={downloadLoading}
+            >
+              <Text style={styles.downloadButtonText}>{downloadLoading ? 'Processando...' : 'Baixar relatório por categoria (PDF)'}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={{ marginBottom: 8 }}>
+            <TouchableOpacity
+              style={[styles.downloadButton]}
+              onPress={handleDownloadMensal}
+              disabled={downloadLoading}
+            >
+              <Text style={styles.downloadButtonText}>{downloadLoading ? 'Processando...' : 'Baixar resumo mensal (PDF)'}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={{ marginBottom: 8 }}>
+            <TouchableOpacity
+              style={[styles.downloadButton]}
+              onPress={handleDownloadPeriodo}
+              disabled={downloadLoading}
+            >
+              <Text style={styles.downloadButtonText}>{downloadLoading ? 'Processando...' : 'Baixar relatório período (últimos 30 dias) (PDF)'}</Text>
+            </TouchableOpacity>
+          </View>
+          <View>
+            <TouchableOpacity
+              style={[styles.requestButton]}
+              onPress={() => requestOnlyPorCategoria(selectedCategoryId || undefined)}
+              disabled={downloadLoading}
+            >
+              <Text style={styles.requestButtonText}>Solicitar relatório (sem salvar/abrir)</Text>
+            </TouchableOpacity>
+          </View>
+        </Card>
       </ScrollView>
     </View>
   );
@@ -283,38 +256,10 @@ const styles = StyleSheet.create({
     color: 'white',
     marginBottom: 16,
   },
-  periodSelector: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 8,
-    padding: 4,
-  },
-  periodButton: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  periodButtonActive: {
-    backgroundColor: 'white',
-  },
-  periodButtonText: {
-    fontSize: 14,
-    color: 'white',
-    fontWeight: '500',
-  },
-  periodButtonTextActive: {
-    color: '#4CAF50',
-    fontWeight: 'bold',
-  },
   scrollContainer: {
     padding: 16,
   },
   card: {
-    marginBottom: 16,
-    padding: 16,
-  },
-  summaryCard: {
     marginBottom: 16,
     padding: 16,
   },
@@ -324,118 +269,33 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 16,
   },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  summaryItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  summaryValuePositive: {
-    fontSize: 16,
-    color: '#4CAF50',
-    fontWeight: 'bold',
-  },
-  summaryValueNegative: {
-    fontSize: 16,
-    color: '#f44336',
-    fontWeight: 'bold',
-  },
-  balanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    marginBottom: 8,
-  },
-  balanceLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  balanceValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  balancePositive: {
-    color: '#4CAF50',
-  },
-  balanceNegative: {
-    color: '#f44336',
-  },
-  transactionCount: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-  },
-  categoryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  categoryRank: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#666',
-    width: 30,
-  },
-  categoryName: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 12,
-  },
-  categoryAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  amountPositive: {
-    color: '#4CAF50',
-  },
-  amountNegative: {
-    color: '#f44336',
-  },
-  accountRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  accountName: {
-    fontSize: 16,
-    color: '#333',
-    flex: 1,
-  },
-  accountDetails: {
-    alignItems: 'flex-end',
-  },
-  accountAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  accountCount: {
-    fontSize: 12,
-    color: '#666',
-  },
   emptyText: {
     fontSize: 14,
     color: '#999',
     textAlign: 'center',
     paddingVertical: 20,
+  },
+  downloadButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  downloadButtonText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  requestButton: {
+    backgroundColor: '#2196F3',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  requestButtonText: {
+    color: 'white',
+    fontWeight: '600',
   },
 });
 
