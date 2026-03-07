@@ -57,7 +57,7 @@ def build_database_url() -> str:
     if env_url:
         return env_url.replace("postgres://", "postgresql+psycopg2://", 1)
 
-    db_user = os.getenv("DB_USER")
+    db_user = os.getenv("DB_USER") or os.getenv("DB_USERNAME")
     db_password = os.getenv("DB_PASSWORD")
     db_host = os.getenv("DB_HOST")
     db_port = os.getenv("DB_PORT")

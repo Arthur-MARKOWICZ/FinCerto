@@ -4,7 +4,7 @@ CREATE TABLE tb_transacao (
     valor DOUBLE PRECISION NOT NULL,
     date TIMESTAMP NOT NULL,
     descricao VARCHAR(255),
-    tipo VARCHAR(255) NOT NULL CHECK (tipo IN ('RECEITA', 'DESPESA')),
+    tipo VARCHAR(255) NOT NULL CHECK (tipo IN ('INCOME', 'EXPENSE')),
     conta_id BIGINT NOT NULL,
     categoria_id BIGINT NOT NULL,
     usuario_id BIGINT NOT NULL,

@@ -72,13 +72,13 @@ public abstract class MultiServiceIntegrationTest {
             pythonApp.execInContainer("pip", "install", "fastapi", "uvicorn", "sqlalchemy", "psycopg2-binary");
             setupPythonApplication();
         } catch (Exception e) {
-            System.err.println("Erro ao configurar Python: " + e.getMessage());
+            System.err.println("Error configuring Python: " + e.getMessage());
         }
     }
 
     private static void setupPythonApplication() {
         try {
-            // Cria um script Python simples diretamente no container
+            // Create a simple Python script directly in the container
             pythonApp.execInContainer("sh", "-c", 
                 "cat > /tmp/app.py << 'EOF'\n" +
                 "from fastapi import FastAPI\n" +
@@ -127,11 +127,11 @@ public abstract class MultiServiceIntegrationTest {
                 "EOF"
             );
             
-            // Executa a aplicação Python em background
+            // Run the Python application in background
             pythonApp.execInContainer("sh", "-c", "python /tmp/app.py &");
             
         } catch (Exception e) {
-            System.err.println("Erro ao configurar aplicação Python: " + e.getMessage());
+            System.err.println("Error configuring Python application: " + e.getMessage());
         }
     }
 
@@ -208,7 +208,7 @@ public abstract class MultiServiceIntegrationTest {
             
             postgres.execInContainer("psql", "-U", "test_user", "-d", "finanCerto_test", "-c", createTableSql);
         } catch (Exception e) {
-            System.err.println("Erro ao configurar banco de testes: " + e.getMessage());
+            System.err.println("Error configuring test database: " + e.getMessage());
         }
     }
 }

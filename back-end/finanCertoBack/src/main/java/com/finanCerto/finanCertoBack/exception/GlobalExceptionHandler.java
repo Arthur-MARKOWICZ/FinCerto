@@ -1,9 +1,9 @@
 package com.finanCerto.finanCertoBack.exception;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -11,62 +11,97 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    private static  final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-        @ExceptionHandler(UsuarioJaExiste.class)
-        public ResponseEntity<Object> handleUsuarioJaExiste(UsuarioJaExiste ex){
-            logger.error("ja existe uma usuario com este email: {}",ex.getMessage());
-            return ConstrutorResposta(HttpStatus.BAD_REQUEST, ex.getMessage());
-        }
-    @ExceptionHandler(CategoriaComMesmoNome.class)
-    public ResponseEntity<Object> handleCategoriaComMesmoNome(CategoriaComMesmoNome ex){
-        logger.error("ja existe uma categoria com este nome: {}",ex.getMessage());
-        return ConstrutorResposta(HttpStatus.BAD_REQUEST, ex.getMessage());
-    }
-    @ExceptionHandler(ContaComOMesmoNome.class)
-    public ResponseEntity<Object> handleContaComOMesmoNome(ContaComOMesmoNome ex){
-            logger.error("ja existe uma conta com este nome: {}",ex.getMessage());
-        return ConstrutorResposta(HttpStatus.BAD_REQUEST, ex.getMessage());
-    }
-    @ExceptionHandler(ContaNaoEncontrada.class)
-    public ResponseEntity<Object> handleContaNaoEncontrada(ContaNaoEncontrada ex){
-            logger.error("conta nao foi encontrada: {}",ex.getMessage());
-        return ConstrutorResposta(HttpStatus.NOT_FOUND, ex.getMessage());
-    }
-    @ExceptionHandler(UsuarioNaoEncontrado.class)
-    public ResponseEntity<Object> handleUsuarioNaoEncontrado(UsuarioNaoEncontrado ex){
-        logger.error("usuario nao foi encontrado: {}", ex.getMessage());
-        return ConstrutorResposta(HttpStatus.NOT_FOUND, ex.getMessage());
-    }
-    @ExceptionHandler(CategoriaNaoEncontrada.class)
-    public ResponseEntity<Object> handleCategoriaNaoEncontrada(CategoriaNaoEncontrada ex){
-        logger.error("categoria nao foi encontrada: {}",ex.getMessage());
-        return ConstrutorResposta(HttpStatus.NOT_FOUND, ex.getMessage());
-    }
-    @ExceptionHandler(TransacaoNaoEncontrada.class)
-    public ResponseEntity<Object> handleTransacaoNaoEncontrada(TransacaoNaoEncontrada ex){
-        logger.error("transacao nao foi encontrada: {}",ex.getMessage());
-        return ConstrutorResposta(HttpStatus.NOT_FOUND, ex.getMessage());
-    }
-    @ExceptionHandler(OrcamentoComMesmoNome.class)
-    public ResponseEntity<Object> handleOrcamentoComMesmoNome(OrcamentoComMesmoNome ex){
-        logger.error("Ja existe um orcamento com este nome: {}",ex.getMessage());
-        return ConstrutorResposta(HttpStatus.CONFLICT, ex.getMessage());
-    }
-    @ExceptionHandler(OrcamentoNaoEncontrado.class)
-    public ResponseEntity<Object> handleOrcamentoNaoEncontrado(OrcamentoNaoEncontrado ex){
-        logger.error("Orcamento nao foi encontrado: {}",ex.getMessage());
-        return ConstrutorResposta(HttpStatus.NOT_FOUND, ex.getMessage());
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handlerUserAlreadyExistsException(UserAlreadyExistsException e) {
+        log.warn("User already exists error: {}", e.getMessage());
+        return buildResponse(e.getMessage(), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlerUserNotFoundException(UserNotFoundException e) {
+        log.warn("User not found error: {}", e.getMessage());
+        return buildResponse(e.getMessage(), HttpStatus.NOT_FOUND);
+    }
 
-    private ResponseEntity<Object> ConstrutorResposta(HttpStatus status, String messagem){
-        Map<String,Object> body= new HashMap<>();
-        body.put("timeStamp", LocalDateTime.now());
+    @ExceptionHandler(InvalidPasswordException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidPasswordException(InvalidPasswordException e) {
+        log.warn("Invalid password error: {}", e.getMessage());
+        return buildResponse(e.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(AccountAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleAccountAlreadyExistsException(AccountAlreadyExistsException e) {
+        log.warn("Account with same name error: {}", e.getMessage());
+        return buildResponse(e.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleAccountNotFoundException(AccountNotFoundException e) {
+        log.warn("Account not found error: {}", e.getMessage());
+        return buildResponse(e.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(CategoryAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleCategoryAlreadyExistsException(CategoryAlreadyExistsException e) {
+        log.warn("Category with same name error: {}", e.getMessage());
+        return buildResponse(e.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(CategoryNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleCategoryNotFoundException(CategoryNotFoundException e) {
+        log.warn("Category not found error: {}", e.getMessage());
+        return buildResponse(e.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(TransactionNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleTransactionNotFoundException(TransactionNotFoundException e) {
+        log.warn("Transaction not found error: {}", e.getMessage());
+        return buildResponse(e.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(BudgetAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleBudgetAlreadyExistsException(BudgetAlreadyExistsException e) {
+        log.warn("Budget with same name error: {}", e.getMessage());
+        return buildResponse(e.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(BudgetNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleBudgetNotFoundException(BudgetNotFoundException e) {
+        log.warn("Budget not found error: {}", e.getMessage());
+        return buildResponse(e.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException e) {
+        log.warn("Validation error: {}", e.getMessage());
+        Map<String, String> errors = new HashMap<>();
+        e.getBindingResult().getFieldErrors().forEach(error -> 
+            errors.put(error.getField(), error.getDefaultMessage())
+        );
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("errors", errors);
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleInternalError(Exception e) {
+        log.error("Internal server error: ", e);
+        return buildResponse("An internal server error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private ResponseEntity<Map<String, Object>> buildResponse(String message, HttpStatus status) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
         body.put("status", status.value());
-        body.put("error", status.getReasonPhrase());
-        body.put("messagem", messagem);
-        return new ResponseEntity<>(body,status);
+        body.put("message", message);
+        return ResponseEntity.status(status).body(body);
     }
 }

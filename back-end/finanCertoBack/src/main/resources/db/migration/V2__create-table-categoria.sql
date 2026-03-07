@@ -2,7 +2,7 @@
 CREATE TABLE tb_categoria (
     id BIGSERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
-    tipo VARCHAR(255) NOT NULL CHECK (tipo IN ('RECEITA', 'DESPESA')),
+    tipo VARCHAR(255) NOT NULL CHECK (tipo IN ('INCOME', 'EXPENSE')),
     usuario_id BIGINT NOT NULL,
     
     CONSTRAINT fk_categoria_usuario 
