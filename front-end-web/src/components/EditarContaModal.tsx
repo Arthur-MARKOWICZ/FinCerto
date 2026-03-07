@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { ContaCadastroDto, Tipos } from '../types/conta';
 import { contaService } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
+import { formatCurrency } from '../utils/format';
 
 interface EditarContaModalProps {
   isOpen: boolean;
@@ -20,45 +23,30 @@ const EditarContaModal: React.FC<EditarContaModalProps> = ({
   onContaAtualizada,
   conta 
 }) => {
-  const [formData, setFormData] = useState<ContaCadastroDto>({
-    nome: '',
-    tipos: Tipos.CORRENTE,
-    saldoInicial: 0,
-    token: localStorage.getItem('token') || '',
-  });
+  const { register, handleSubmit, reset } = useForm<ContaCadastroDto>();
   const [erro, setErro] = useState<string>('');
   const [carregando, setCarregando] = useState<boolean>(false);
+  const { token } = useAuth();
 
   useEffect(() => {
     if (isOpen && conta) {
-      setFormData({
+      reset({
         nome: conta.nome,
         tipos: conta.tipos,
         saldoInicial: conta.saldoInicial || 0,
-        token: localStorage.getItem('token') || '',
       });
     }
-  }, [isOpen, conta]);
+  }, [isOpen, conta, reset]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'saldoInicial' ? parseFloat(value) || 0 : value,
-      tipos: name === 'tipos' ? value as Tipos : prev.tipos,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: ContaCadastroDto) => {
     setErro('');
     setCarregando(true);
 
     try {
-     
       const dadosAtualizacao = {
-        ...formData,
-        saldoInicial: conta.saldoInicial || 0 // Mantém o saldo original
+        ...data,
+        saldoInicial: conta.saldoInicial || 0, // Mantém o saldo original
+        token: token || ''
       };
       
       await contaService.atualizar(conta.id, dadosAtualizacao);
@@ -88,7 +76,7 @@ const EditarContaModal: React.FC<EditarContaModalProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div>
               <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
@@ -96,11 +84,8 @@ const EditarContaModal: React.FC<EditarContaModalProps> = ({
               </label>
               <input
                 id="nome"
-                name="nome"
                 type="text"
-                required
-                value={formData.nome}
-                onChange={handleChange}
+                {...register('nome', { required: true })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Ex: Conta Corrente Itaú"
               />
@@ -112,9 +97,7 @@ const EditarContaModal: React.FC<EditarContaModalProps> = ({
               </label>
               <select
                 id="tipos"
-                name="tipos"
-                value={formData.tipos}
-                onChange={handleChange}
+                {...register('tipos', { required: true })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value={Tipos.CORRENTE}>Conta Corrente</option>
@@ -129,7 +112,7 @@ const EditarContaModal: React.FC<EditarContaModalProps> = ({
                 Para ajustar o saldo, adicione transações de receita ou despesa.
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                Saldo atual: R$ {conta.saldoInicial?.toFixed(2) || '0,00'}
+                Saldo atual: {formatCurrency(conta.saldoInicial)}
               </p>
             </div>
           </div>

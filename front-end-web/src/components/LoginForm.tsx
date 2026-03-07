@@ -1,37 +1,25 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate, Link } from 'react-router-dom';
 import { LoginRequestDto } from '../types/usuario';
 import { usuarioService } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
-interface LoginFormProps {
-  onSuccess: (token: string) => void;
-  onCadastroClick: () => void;
-}
-
-const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onCadastroClick }) => {
-  const [formData, setFormData] = useState<LoginRequestDto>({
-    email: '',
-    senha: '',
-  });
+const LoginForm: React.FC = () => {
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginRequestDto>();
   const [erro, setErro] = useState<string>('');
   const [carregando, setCarregando] = useState<boolean>(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: LoginRequestDto) => {
     setErro('');
     setCarregando(true);
 
     try {
-      const response = await usuarioService.login(formData);
-      localStorage.setItem('token', response.token);
-      onSuccess(response.token);
+      const response = await usuarioService.login(data);
+      login(response.token);
+      navigate('/');
     } catch (error: any) {
       if (error.response?.status === 401) {
         setErro('Email ou senha incorretos.');
@@ -54,15 +42,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onCadastroClick }) => 
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Ou{' '}
-            <button
-              onClick={onCadastroClick}
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
+            <Link to="/cadastro" className="font-medium text-blue-600 hover:text-blue-500">
               crie uma nova conta
-            </button>
+            </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           {erro && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
               {erro}
@@ -75,14 +60,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onCadastroClick }) => 
               </label>
               <input
                 id="email"
-                name="email"
                 type="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
+                {...register('email', { required: 'Email é obrigatório' })}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="seu@email.com"
               />
+              {errors.email && <span className="text-red-500 text-xs">{errors.email.message as string}</span>}
             </div>
             <div>
               <label htmlFor="senha" className="block text-sm font-medium text-gray-700">
@@ -90,14 +73,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onCadastroClick }) => 
               </label>
               <input
                 id="senha"
-                name="senha"
                 type="password"
-                required
-                value={formData.senha}
-                onChange={handleChange}
+                {...register('senha', { required: 'Senha é obrigatória' })}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Sua senha"
               />
+              {errors.senha && <span className="text-red-500 text-xs">{errors.senha.message as string}</span>}
             </div>
           </div>
 

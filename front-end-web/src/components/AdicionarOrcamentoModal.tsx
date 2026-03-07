@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { OrcamentoCadastroDto } from '../types/orcamento';
 import { orcamentoApiService } from '../services/orcamentoApi';
+import { useAuth } from '../hooks/useAuth';
 
 interface AdicionarOrcamentoModalProps {
   isOpen: boolean;
@@ -13,47 +15,24 @@ const AdicionarOrcamentoModal: React.FC<AdicionarOrcamentoModalProps> = ({
   onClose,
   onOrcamentoAdicionado
 }) => {
-  const [formData, setFormData] = useState<OrcamentoCadastroDto>({
-    valorLimite: 0,
-    valorInical: 0,
-    nome: '',
-    prazo: '',
-    categoriaNome: '',
-    token: ''
-  });
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<OrcamentoCadastroDto>();
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState('');
+  const { token } = useAuth();
 
-  React.useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setFormData(prev => ({ ...prev, token }));
-    }
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.nome || !formData.categoriaNome || formData.valorLimite <= 0) {
-      setErro('Preencha todos os campos obrigatórios.');
-      return;
-    }
-
+  const onSubmit = async (data: OrcamentoCadastroDto) => {
     try {
       setCarregando(true);
       setErro('');
       
-      await orcamentoApiService.cadastrar(formData);
-      
-      setFormData({
-        valorLimite: 0,
-        valorInical: 0,
-        nome: '',
-        prazo: '',
-        categoriaNome: '',
-        token: formData.token
+      await orcamentoApiService.cadastrar({
+        ...data,
+        valorLimite: Number(data.valorLimite),
+        valorInical: Number(data.valorInical || 0),
+        token: token || ''
       });
       
+      reset();
       onClose();
       if (onOrcamentoAdicionado) {
         onOrcamentoAdicionado();
@@ -73,19 +52,18 @@ const AdicionarOrcamentoModal: React.FC<AdicionarOrcamentoModalProps> = ({
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
         <h2 className="text-xl font-bold mb-4">Adicionar Orçamento</h2>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Nome do Orçamento
             </label>
             <input
               type="text"
-              value={formData.nome}
-              onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+              {...register('nome', { required: 'Nome é obrigatório' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Ex: Orçamento Mensal"
-              required
             />
+            {errors.nome && <span className="text-red-500 text-xs">{errors.nome.message as string}</span>}
           </div>
 
           <div>
@@ -94,12 +72,11 @@ const AdicionarOrcamentoModal: React.FC<AdicionarOrcamentoModalProps> = ({
             </label>
             <input
               type="text"
-              value={formData.categoriaNome}
-              onChange={(e) => setFormData({ ...formData, categoriaNome: e.target.value })}
+              {...register('categoriaNome', { required: 'Categoria é obrigatória' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Ex: Alimentação"
-              required
             />
+            {errors.categoriaNome && <span className="text-red-500 text-xs">{errors.categoriaNome.message as string}</span>}
           </div>
 
           <div>
@@ -108,14 +85,13 @@ const AdicionarOrcamentoModal: React.FC<AdicionarOrcamentoModalProps> = ({
             </label>
             <input
               type="number"
-              value={formData.valorLimite}
-              onChange={(e) => setFormData({ ...formData, valorLimite: parseFloat(e.target.value) || 0 })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="0.00"
               step="0.01"
               min="0"
-              required
+              {...register('valorLimite', { required: 'Valor limite é obrigatório', min: { value: 0.01, message: 'Valor deve ser maior que 0' } })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="0.00"
             />
+            {errors.valorLimite && <span className="text-red-500 text-xs">{errors.valorLimite.message as string}</span>}
           </div>
 
           <div>
@@ -124,12 +100,11 @@ const AdicionarOrcamentoModal: React.FC<AdicionarOrcamentoModalProps> = ({
             </label>
             <input
               type="number"
-              value={formData.valorInical}
-              onChange={(e) => setFormData({ ...formData, valorInical: parseFloat(e.target.value) || 0 })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="0.00"
               step="0.01"
               min="0"
+              {...register('valorInical')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="0.00"
             />
           </div>
 
@@ -139,11 +114,10 @@ const AdicionarOrcamentoModal: React.FC<AdicionarOrcamentoModalProps> = ({
             </label>
             <input
               type="date"
-              value={formData.prazo}
-              onChange={(e) => setFormData({ ...formData, prazo: e.target.value })}
+              {...register('prazo', { required: 'Prazo é obrigatório' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
             />
+            {errors.prazo && <span className="text-red-500 text-xs">{errors.prazo.message as string}</span>}
           </div>
 
           {erro && (

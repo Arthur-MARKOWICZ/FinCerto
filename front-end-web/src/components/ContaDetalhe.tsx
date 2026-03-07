@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Zap, Loader2, PlusCircle, Edit } from 'lucide-react';
 import { Conta, Tipos } from '../types/conta';
 import { contaService } from '../services/api';
 import AdicionarTransacaoModal from './AdicionarTransacaoModal';
@@ -6,6 +7,7 @@ import EditarContaModal from './EditarContaModal';
 import TransacoesList from './TransacoesList';
 import OrcamentoList from './OrcamentoList';
 import SelecionarContaModal from './SelecionarContaModal';
+import { formatCurrency } from '../utils/format';
 
 interface ContaDetalheProps {
   conta: Conta;
@@ -48,7 +50,6 @@ const ContaDetalhe: React.FC<ContaDetalheProps> = ({
     if (conta.id) {
       contaService.obterSaldo(conta.id).then(setSaldo);
     }
-    
     onContaAtualizada?.();
   };
 
@@ -57,9 +58,7 @@ const ContaDetalhe: React.FC<ContaDetalheProps> = ({
   };
 
   const handleTrocarConta = (novaConta: Conta) => {
-   
     setModalSelecionarAberto(false);
-   
     setTimeout(() => {
       onTrocarConta?.();
     }, 300);
@@ -91,13 +90,6 @@ const ContaDetalhe: React.FC<ContaDetalheProps> = ({
     }
   };
 
-  const formatarSaldo = (valor: number): string => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(valor);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -105,14 +97,14 @@ const ContaDetalhe: React.FC<ContaDetalheProps> = ({
           <div className="mb-6">
             <button
               onClick={onVoltar}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
-              <span>←</span>
-              <span>Voltar para Contas</span>
+              <ArrowLeft size={20} />
+              <span className="font-medium">Voltar para Contas</span>
             </button>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">{conta.nome}</h1>
@@ -121,59 +113,67 @@ const ContaDetalhe: React.FC<ContaDetalheProps> = ({
                     {getTipoLabel(conta.tipos)}
                   </span>
                   {conta.id && (
-                    <span className="text-gray-500 text-sm">ID: #{conta.id}</span>
+                    <span className="text-gray-500 text-sm font-mono bg-gray-50 px-2 py-1 rounded">ID #{conta.id}</span>
                   )}
                 </div>
               </div>
               <button
                 onClick={() => setModalSelecionarAberto(true)}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md flex items-center space-x-2"
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors shadow-sm"
               >
-                <span>⚡</span>
-                <span>Trocar Conta</span>
+                <Zap size={18} />
+                <span className="font-medium">Trocar Conta</span>
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumo da Conta</h2>
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Zap size={20} className="text-blue-500 mr-2" />
+                  Resumo da Conta
+                </h2>
                 
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Saldo Atual:</span>
+                  <div className="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm">
+                    <span className="text-gray-600 font-medium">Saldo Atual:</span>
                     {carregandoSaldo ? (
-                      <div className="text-gray-500">Carregando...</div>
+                      <Loader2 size={24} className="animate-spin text-blue-500" />
                     ) : (
                       <span className={`text-2xl font-bold ${
                         saldo >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {formatarSaldo(saldo)}
+                        {formatCurrency(saldo)}
                       </span>
                     )}
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Tipo:</span>
-                    <span className="font-medium">{getTipoLabel(conta.tipos)}</span>
+                  <div className="flex justify-between items-center px-2">
+                    <span className="text-gray-600 text-sm">Tipo:</span>
+                    <span className="font-medium text-gray-800">{getTipoLabel(conta.tipos)}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Ações Rápidas</h2>
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Edit size={20} className="text-gray-500 mr-2" />
+                  Ações Rápidas
+                </h2>
                 
                 <div className="space-y-3">
                   <button
                     onClick={() => setModalTransacaoAberto(true)}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-colors shadow-sm flex justify-center items-center space-x-2"
                   >
-                    Adicionar Transação
+                    <PlusCircle size={20} />
+                    <span>Adicionar Transação</span>
                   </button>
                   <button
                     onClick={() => setModalEditarAberto(true)}
-                    className="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
+                    className="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-lg font-medium transition-colors shadow-sm flex justify-center items-center space-x-2"
                   >
-                    Editar Conta
+                    <Edit size={20} />
+                    <span>Editar Conta</span>
                   </button>
                 </div>
               </div>

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { Transacao, TransacaoTipos, TransacaoCadastroDto } from '../types/transacao';
 import { Tipo, CategoriaCadastroDto } from '../types/categoria';
 import { transacaoApiService } from '../services/transacaoApi';
 import categoriaApiService from '../services/categoriaApi';
+import { useAuth } from '../hooks/useAuth';
 
 interface AdicionarTransacaoModalProps {
   isOpen: boolean;
@@ -17,15 +19,18 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
   onTransacaoAdicionada,
   contaNome 
 }) => {
-  const [formData, setFormData] = useState<TransacaoCadastroDto>({
-    valor: 0,
-    data: new Date().toISOString().slice(0, 16), 
-    descricao: '',
-    tipo: TransacaoTipos.DESPESA,
-    nomeConta: contaNome,
-    nomeCategoria: '',
-    token: localStorage.getItem('token') || '',
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<TransacaoCadastroDto>({
+    defaultValues: {
+      valor: 0,
+      data: new Date().toISOString().slice(0, 16), 
+      descricao: '',
+      tipo: TransacaoTipos.DESPESA,
+      nomeConta: contaNome,
+      nomeCategoria: ''
+    }
   });
+  const { token } = useAuth();
+  
   const [categorias, setCategorias] = useState<string[]>([]);
   const [novaCategoria, setNovaCategoria] = useState<string>('');
   const [mostrarNovaCategoria, setMostrarNovaCategoria] = useState<boolean>(false);
@@ -33,74 +38,43 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
   const [carregando, setCarregando] = useState<boolean>(false);
   const [carregandoCategorias, setCarregandoCategorias] = useState<boolean>(false);
 
+  const tipoAtual = watch('tipo');
+  const nomeCategoriaAtual = watch('nomeCategoria');
+
   useEffect(() => {
-    if (isOpen && formData.tipo) {
+    if (isOpen && tipoAtual) {
       carregarCategorias();
     }
-  }, [isOpen, formData.tipo]);
+  }, [isOpen, tipoAtual]);
 
   const carregarCategorias = async () => {
     try {
       setCarregandoCategorias(true);
-      
-     
       let todasCategorias: any[] = [];
       let pagina = 0;
       let temMaisPaginas = true;
       
       while (temMaisPaginas) {
-        console.log(`Carregando página ${pagina} de categorias...`);
         const response = await categoriaApiService.obterPorUsuario(pagina, 50);
-        console.log(`Resposta página ${pagina}:`, response);
-        
         const categoriasDaPagina = response.content || [];
         todasCategorias = [...todasCategorias, ...categoriasDaPagina];
-        
-       
         temMaisPaginas = response.totalPages > pagina + 1 && categoriasDaPagina.length > 0;
         pagina++;
-        
-       
-        if (pagina >= 10) {
-          console.warn('Limite de páginas alcançado, parando carregamento de categorias');
-          break;
-        }
+        if (pagina >= 10) break;
       }
-      
-      console.log('Total de categorias carregadas:', todasCategorias.length);
-      console.log('Tipos de transação:', formData.tipo);
       
       const categoriasFiltradas = todasCategorias
         .filter((cat: any) => {
-          const tipoEsperado = formData.tipo === TransacaoTipos.DESPESA ? 'DESPESA' : 'RECEITA';
-          const match = cat.tipo === tipoEsperado;
-          console.log(`Categoria ${cat.nome} (${cat.tipo}) vs ${tipoEsperado}: ${match}`);
-          return match;
+          const tipoEsperado = tipoAtual === TransacaoTipos.DESPESA ? 'DESPESA' : 'RECEITA';
+          return cat.tipo === tipoEsperado;
         })
         .map((cat: any) => cat.nome);
-      
-      console.log('Categorias filtradas:', categoriasFiltradas);
       
       setCategorias(categoriasFiltradas);
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
-    
     } finally {
       setCarregandoCategorias(false);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev: TransacaoCadastroDto) => ({
-      ...prev,
-      [name]: name === 'valor' ? parseFloat(value) || 0 : value,
-      tipo: name === 'tipo' ? value as TransacaoTipos : prev.tipo,
-    }));
-    if (name === 'tipo') {
-      setMostrarNovaCategoria(false);
-      setNovaCategoria('');
-      carregarCategorias();
     }
   };
 
@@ -108,10 +82,10 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
     const value = e.target.value;
     if (value === 'nova') {
       setMostrarNovaCategoria(true);
-      setFormData((prev: TransacaoCadastroDto) => ({ ...prev, nomeCategoria: '' }));
+      setValue('nomeCategoria', '');
     } else {
       setMostrarNovaCategoria(false);
-      setFormData((prev: TransacaoCadastroDto) => ({ ...prev, nomeCategoria: value }));
+      setValue('nomeCategoria', value);
       setNovaCategoria('');
     }
   };
@@ -123,17 +97,15 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
       setCarregando(true);
       const categoriaDto = {
         nome: novaCategoria.trim(),
-        tipo: formData.tipo === TransacaoTipos.DESPESA ? Tipo.DESPESA : Tipo.RECEITA,
-        token: localStorage.getItem('token') || ''
+        tipo: tipoAtual === TransacaoTipos.DESPESA ? Tipo.DESPESA : Tipo.RECEITA,
+        token: token || ''
       };
       await categoriaApiService.cadastrar(categoriaDto);
-      
       await carregarCategorias();
-      setFormData((prev: TransacaoCadastroDto) => ({ ...prev, nomeCategoria: novaCategoria.trim() }));
+      setValue('nomeCategoria', novaCategoria.trim());
       setNovaCategoria('');
       setMostrarNovaCategoria(false);
     } catch (error: any) {
-      console.error('Erro ao criar categoria:', error);
       if (error.response?.data?.message) {
         setErro(error.response.data.message);
       } else {
@@ -144,9 +116,8 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.nomeCategoria.trim()) {
+  const onSubmit = async (data: TransacaoCadastroDto) => {
+    if (!data.nomeCategoria?.trim()) {
       setErro('Selecione ou crie uma categoria');
       return;
     }
@@ -155,18 +126,11 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
     setCarregando(true);
 
     try {
-      await transacaoApiService.cadastrar(formData);
+      await transacaoApiService.cadastrar({ ...data, valor: Number(data.valor), token: token || '', nomeConta: contaNome });
       onTransacaoAdicionada();
+      reset();
       onClose();
-      setFormData({
-        valor: 0,
-        data: new Date().toISOString().split('T')[0],
-        descricao: '',
-        tipo: TransacaoTipos.DESPESA,
-        nomeConta: contaNome,
-        nomeCategoria: '',
-        token: localStorage.getItem('token') || '',
-      });
+      setValue('data', new Date().toISOString().slice(0, 16));
     } catch (error: any) {
       if (error.response?.data?.message) {
         setErro(error.response.data.message);
@@ -191,7 +155,7 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div>
               <label htmlFor="tipo" className="block text-sm font-medium text-gray-700 mb-1">
@@ -199,10 +163,13 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
               </label>
               <select
                 id="tipo"
-                name="tipo"
-                value={formData.tipo}
-                onChange={handleChange}
+                {...register('tipo', { required: 'Tipo é obrigatório' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => {
+                  setValue('tipo', e.target.value as TransacaoTipos);
+                  setMostrarNovaCategoria(false);
+                  setNovaCategoria('');
+                }}
               >
                 <option value={TransacaoTipos.DESPESA}>Despesa</option>
                 <option value={TransacaoTipos.RECEITA}>Receita</option>
@@ -215,15 +182,13 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
               </label>
               <input
                 id="valor"
-                name="valor"
                 type="number"
                 step="0.01"
-                required
-                value={formData.valor}
-                onChange={handleChange}
+                {...register('valor', { required: 'Valor é obrigatório', min: { value: 0.01, message: 'Deve ser maior que zero' } })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
               />
+              {errors.valor && <span className="text-red-500 text-xs">{errors.valor.message as string}</span>}
             </div>
 
             <div>
@@ -233,11 +198,10 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
               <input
                 type="datetime-local"
                 id="data"
-                name="data"
-                value={formData.data}
-                onChange={handleChange}
+                {...register('data', { required: 'Data é obrigatória' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {errors.data && <span className="text-red-500 text-xs">{errors.data.message as string}</span>}
             </div>
 
             <div>
@@ -246,14 +210,12 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
               </label>
               <textarea
                 id="descricao"
-                name="descricao"
-                required
-                value={formData.descricao}
-                onChange={handleChange}
                 rows={3}
+                {...register('descricao', { required: 'Descrição é obrigatória' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Descrição da transação"
               />
+              {errors.descricao && <span className="text-red-500 text-xs">{errors.descricao.message as string}</span>}
             </div>
 
             <div>
@@ -267,7 +229,7 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
               ) : (
                 <select
                   id="categoria"
-                  value={mostrarNovaCategoria ? 'nova' : formData.nomeCategoria}
+                  value={mostrarNovaCategoria ? 'nova' : nomeCategoriaAtual}
                   onChange={handleCategoriaChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
@@ -312,7 +274,7 @@ const AdicionarTransacaoModal: React.FC<AdicionarTransacaoModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={carregando || !formData.nomeCategoria.trim()}
+              disabled={carregando || !nomeCategoriaAtual?.trim()}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {carregando ? 'Adicionando...' : 'Adicionar Transação'}

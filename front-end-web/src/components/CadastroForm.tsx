@@ -1,37 +1,22 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate, Link } from 'react-router-dom';
 import { UsuarioCadastroDto } from '../types/usuario';
 import { usuarioService } from '../services/api';
 
-interface CadastroFormProps {
-  onSuccess: () => void;
-  onLoginClick: () => void;
-}
-
-const CadastroForm: React.FC<CadastroFormProps> = ({ onSuccess, onLoginClick }) => {
-  const [formData, setFormData] = useState<UsuarioCadastroDto>({
-    nome: '',
-    email: '',
-    senha: '',
-  });
+const CadastroForm: React.FC = () => {
+  const { register, handleSubmit, formState: { errors } } = useForm<UsuarioCadastroDto>();
   const [erro, setErro] = useState<string>('');
   const [carregando, setCarregando] = useState<boolean>(false);
+  const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: UsuarioCadastroDto) => {
     setErro('');
     setCarregando(true);
 
     try {
-      await usuarioService.cadastrar(formData);
-      onSuccess();
+      await usuarioService.cadastrar(data);
+      navigate('/login');
     } catch (error: any) {
       if (error.response?.data?.message) {
         setErro(error.response.data.message);
@@ -54,15 +39,12 @@ const CadastroForm: React.FC<CadastroFormProps> = ({ onSuccess, onLoginClick }) 
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Ou{' '}
-            <button
-              onClick={onLoginClick}
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
+            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
               faça login na sua conta existente
-            </button>
+            </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           {erro && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
               {erro}
@@ -75,14 +57,12 @@ const CadastroForm: React.FC<CadastroFormProps> = ({ onSuccess, onLoginClick }) 
               </label>
               <input
                 id="nome"
-                name="nome"
                 type="text"
-                required
-                value={formData.nome}
-                onChange={handleChange}
+                {...register('nome', { required: 'Nome é obrigatório' })}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Seu nome completo"
               />
+              {errors.nome && <span className="text-red-500 text-xs">{errors.nome.message as string}</span>}
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -90,14 +70,12 @@ const CadastroForm: React.FC<CadastroFormProps> = ({ onSuccess, onLoginClick }) 
               </label>
               <input
                 id="email"
-                name="email"
                 type="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
+                {...register('email', { required: 'Email é obrigatório' })}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="seu@email.com"
               />
+              {errors.email && <span className="text-red-500 text-xs">{errors.email.message as string}</span>}
             </div>
             <div>
               <label htmlFor="senha" className="block text-sm font-medium text-gray-700">
@@ -105,14 +83,15 @@ const CadastroForm: React.FC<CadastroFormProps> = ({ onSuccess, onLoginClick }) 
               </label>
               <input
                 id="senha"
-                name="senha"
                 type="password"
-                required
-                value={formData.senha}
-                onChange={handleChange}
+                {...register('senha', { 
+                  required: 'Senha é obrigatória',
+                  minLength: { value: 6, message: 'No mínimo 6 caracteres' } 
+                })}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Sua senha"
               />
+              {errors.senha && <span className="text-red-500 text-xs">{errors.senha.message as string}</span>}
             </div>
           </div>
 

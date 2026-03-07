@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { ContaCadastroDto, Tipos } from '../types/conta';
 import { contaService } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 interface CriarContaModalProps {
   isOpen: boolean;
@@ -9,39 +11,25 @@ interface CriarContaModalProps {
 }
 
 const CriarContaModal: React.FC<CriarContaModalProps> = ({ isOpen, onClose, onContaCriada }) => {
-  const [formData, setFormData] = useState<ContaCadastroDto>({
-    nome: '',
-    tipos: Tipos.CORRENTE,
-    saldoInicial: 0,
-    token: localStorage.getItem('token') || '',
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<ContaCadastroDto>({
+    defaultValues: {
+      tipos: Tipos.CORRENTE,
+      saldoInicial: 0
+    }
   });
+  const { token } = useAuth();
   const [erro, setErro] = useState<string>('');
   const [carregando, setCarregando] = useState<boolean>(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'saldoInicial' ? parseFloat(value) || 0 : value,
-      tipos: name === 'tipos' ? value as Tipos : prev.tipos,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: ContaCadastroDto) => {
     setErro('');
     setCarregando(true);
 
     try {
-      await contaService.cadastrar(formData);
+      await contaService.cadastrar({ ...data, token: token || '', saldoInicial: Number(data.saldoInicial) });
       onContaCriada();
+      reset();
       onClose();
-      setFormData({
-        nome: '',
-        tipos: Tipos.CORRENTE,
-        saldoInicial: 0,
-        token: localStorage.getItem('token') || '',
-      });
     } catch (error: any) {
       if (error.response?.data?.message) {
         setErro(error.response.data.message);
@@ -66,7 +54,7 @@ const CriarContaModal: React.FC<CriarContaModalProps> = ({ isOpen, onClose, onCo
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div>
               <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
@@ -74,14 +62,12 @@ const CriarContaModal: React.FC<CriarContaModalProps> = ({ isOpen, onClose, onCo
               </label>
               <input
                 id="nome"
-                name="nome"
                 type="text"
-                required
-                value={formData.nome}
-                onChange={handleChange}
+                {...register('nome', { required: 'Nome da conta é obrigatório' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Ex: Conta Corrente Itaú"
               />
+              {errors.nome && <span className="text-red-500 text-xs">{errors.nome.message as string}</span>}
             </div>
 
             <div>
@@ -90,9 +76,7 @@ const CriarContaModal: React.FC<CriarContaModalProps> = ({ isOpen, onClose, onCo
               </label>
               <select
                 id="tipos"
-                name="tipos"
-                value={formData.tipos}
-                onChange={handleChange}
+                {...register('tipos', { required: 'Tipo é obrigatório' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value={Tipos.CORRENTE}>Conta Corrente</option>
@@ -107,15 +91,13 @@ const CriarContaModal: React.FC<CriarContaModalProps> = ({ isOpen, onClose, onCo
               </label>
               <input
                 id="saldoInicial"
-                name="saldoInicial"
                 type="number"
                 step="0.01"
-                required
-                value={formData.saldoInicial}
-                onChange={handleChange}
+                {...register('saldoInicial', { required: 'Saldo inicial é obrigatório' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
               />
+              {errors.saldoInicial && <span className="text-red-500 text-xs">{errors.saldoInicial.message as string}</span>}
             </div>
           </div>
 

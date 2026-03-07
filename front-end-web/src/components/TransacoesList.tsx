@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Transacao, TransacaoTipos, Categoria, Conta, Usuario } from '../types/transacao';
+import { Transacao, TransacaoTipos } from '../types/transacao';
 import { transacaoApiService } from '../services/transacaoApi';
+import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { formatCurrency } from '../utils/format';
 
 interface TransacoesListProps {
   contaId: number;
@@ -39,13 +41,13 @@ const TransacoesList: React.FC<TransacoesListProps> = ({
 
   useEffect(() => {
     carregarTransacoes();
-  }, [contaId]);
+  }, [contaId, contaNome]); // added contaNome to deps
 
   useEffect(() => {
     if (onTransacaoAtualizada) {
       onTransacaoAtualizada();
     }
-  }, [transacoes, onTransacaoAtualizada]);
+  }, [transacoes]);
 
   const proximaPagina = () => {
     if (paginaAtual < totalPaginas - 1) {
@@ -71,12 +73,8 @@ const TransacoesList: React.FC<TransacoesListProps> = ({
     });
   };
 
-  const formatarValor = (valor: number, tipo: TransacaoTipos): string => {
-    const formatted = new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(Math.abs(valor));
-    
+  const formataTransacaoValor = (valor: number, tipo: TransacaoTipos): string => {
+    const formatted = formatCurrency(Math.abs(valor));
     return tipo === TransacaoTipos.DESPESA ? `-${formatted}` : `+${formatted}`;
   };
 
@@ -96,15 +94,16 @@ const TransacoesList: React.FC<TransacoesListProps> = ({
 
   if (carregando) {
     return (
-      <div className="flex justify-center items-center h-32">
-        <div className="text-gray-500">Carregando transações...</div>
+      <div className="flex flex-col justify-center items-center h-32 space-y-2">
+        <Loader2 className="animate-spin text-blue-500" size={32} />
+        <div className="text-gray-500 font-medium">Carregando transações...</div>
       </div>
     );
   }
 
   if (erro) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-sm">
         {erro}
       </div>
     );
@@ -112,8 +111,8 @@ const TransacoesList: React.FC<TransacoesListProps> = ({
 
   if (transacoes.length === 0) {
     return (
-      <div className="text-center py-8">
-        <div className="text-gray-500">Nenhuma transação encontrada</div>
+      <div className="text-center bg-gray-50 border border-dashed border-gray-300 rounded-xl py-12">
+        <div className="text-gray-500 font-medium">Nenhuma transação encontrada</div>
         <p className="text-sm text-gray-400 mt-2">
           Adicione sua primeira transação usando o botão "Adicionar Transação"
         </p>
@@ -125,52 +124,54 @@ const TransacoesList: React.FC<TransacoesListProps> = ({
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Transações Recentes</h3>
-        <div className="text-sm text-gray-500">
-          Mostrando {transacoes.length} de {totalElementos} transações
+        <div className="text-sm bg-gray-100 px-3 py-1 rounded-full text-gray-600 font-medium shadow-sm">
+          {totalElementos} {totalElementos === 1 ? 'transação' : 'transações'}
         </div>
       </div>
       
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Data
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Descrição
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Categoria
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Tipo
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Valor
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-100">
               {transacoes.map((transacao) => (
-                <tr key={transacao.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <tr key={transacao.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
                     {formatarData(transacao.date)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                     {transacao.descricao}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {transacao.categoria?.nome || '-'}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <span className="bg-gray-100 px-2 py-1 rounded-md">
+                      {transacao.categoria?.nome || '-'}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getCorBadge(transacao.tipo)}`}>
+                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-bold rounded-md shadow-sm ${getCorBadge(transacao.tipo)}`}>
                       {getTipoLabel(transacao.tipo)}
                     </span>
                   </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${getCorValor(transacao.tipo)}`}>
-                    {formatarValor(transacao.valor, transacao.tipo)}
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold text-right ${getCorValor(transacao.tipo)}`}>
+                    {formataTransacaoValor(transacao.valor, transacao.tipo)}
                   </td>
                 </tr>
               ))}
@@ -179,26 +180,27 @@ const TransacoesList: React.FC<TransacoesListProps> = ({
         </div>
       </div>
       
-      
       {totalPaginas > 1 && (
-        <div className="flex justify-between items-center mt-4">
-          <div className="text-sm text-gray-500">
-            Página {paginaAtual + 1} de {totalPaginas}
+        <div className="flex justify-between items-center mt-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+          <div className="text-sm font-medium text-gray-500">
+            Página <span className="text-gray-900">{paginaAtual + 1}</span> de <span className="text-gray-900">{totalPaginas}</span>
           </div>
           <div className="flex space-x-2">
             <button
               onClick={paginaAnterior}
               disabled={paginaAtual === 0}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-sm"
             >
-              ← Anterior
+              <ChevronLeft size={18} className="mr-1" />
+              <span>Anterior</span>
             </button>
             <button
               onClick={proximaPagina}
               disabled={paginaAtual === totalPaginas - 1}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-sm"
             >
-              Próximas 5 →
+              <span>Próximos</span>
+              <ChevronRight size={18} className="ml-1" />
             </button>
           </div>
         </div>
