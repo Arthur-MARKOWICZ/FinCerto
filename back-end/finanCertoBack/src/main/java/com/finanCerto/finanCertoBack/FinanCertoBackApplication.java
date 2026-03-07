@@ -15,7 +15,6 @@ public class FinanCertoBackApplication {
 			String dbPassword = dotenv.get("DB_PASSWORD");
 			String jwtSecret = dotenv.get("JWT_SECRET");
 			String fastApiUrl = dotenv.get("FASTAPI_BASE_URL");
-			
 			if (dbUsername != null) System.setProperty("DB_USERNAME", dbUsername);
 			if (dbPassword != null) System.setProperty("DB_PASSWORD", dbPassword);
 			if (jwtSecret != null) System.setProperty("JWT_SECRET", jwtSecret);

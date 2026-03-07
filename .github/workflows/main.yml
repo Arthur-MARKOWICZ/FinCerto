@@ -1,4 +1,4 @@
- name: CI/CD Financerto Professional
+name: CI/CD FinCerto
 
 on:
   push:
@@ -6,7 +6,8 @@ on:
     paths:
       - 'back-end/finanCertoBack/**'
       - 'back-end/financerto-analytics/**'
-      - 'front-end/**'
+      - 'front-end-web/**'
+      - 'front-end-mobile/**'
   pull_request:
     branches: [ "main" ]
 
@@ -14,22 +15,22 @@ jobs:
   # --- JOB 1: JAVA ---
   test-java:
     runs-on: ubuntu-latest
-    # Adicionamos uma verificação mais robusta para mudanças na pasta
+    # Added more robust change verification for folder
     outputs:
       changed: ${{ steps.check_changes.outputs.java }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Necessário para comparar versões
+          fetch-depth: 0 # Required to compare versions
 
-      - name: Verificar mudanças no Java
+      - name: Check Java changes
         id: check_changes
         run: |
           if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep 'back-end/finanCertoBack'; then
             echo "java=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Configurar JDK 21
+      - name: Setup JDK 21
         if: steps.check_changes.outputs.java == 'true'
         uses: actions/setup-java@v4
         with:
@@ -37,7 +38,7 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Executar Testes (Maven)
+      - name: Run Tests (Maven)
         if: steps.check_changes.outputs.java == 'true'
         working-directory: ./back-end/finanCertoBack
         run: mvn test
@@ -48,8 +49,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      # Filtro simples: Só roda se houver mudança na pasta
-      - name: Verificar mudanças no Python
+      # Simple filter: Only runs if there are changes in folder
+      - name: Check Python changes
         id: filter
         uses: dorny/paths-filter@v3
         with:
@@ -57,13 +58,13 @@ jobs:
             python:
               - 'back-end/financerto-analytics/**'
 
-      - name: Configurar Python
+      - name: Setup Python
         if: steps.filter.outputs.python == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Instalar e Testar
+      - name: Install and Test
         if: steps.filter.outputs.python == 'true'
         working-directory: ./back-end/financerto-analytics
         run: |
@@ -73,7 +74,7 @@ jobs:
 
   # --- JOB 3: DEPLOY ---
   deploy:
-    # Use 'always()' com condições para garantir que o deploy rode se os testes passarem OU forem pulados
+    # Use 'always()' with conditions to ensure deploy runs if tests pass OR are skipped
     needs: [test-python, test-java]
     if: |
       always() &&
@@ -82,7 +83,7 @@ jobs:
       (needs.test-java.result == 'success' || needs.test-java.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy na Oracle Cloud via SSH
+      - name: Deploy to Oracle Cloud via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.ORACLE_HOST }}
@@ -91,100 +92,100 @@ jobs:
           script: |
             set -e
             
-            echo "========== DIAGNÓSTICO DO DEPLOY =========="
+            echo "========== DEPLOY DIAGNOSIS =========="
             echo "User: $(whoami)"
             echo "Home: $HOME"
             echo "PWD: $(pwd)"
             echo ""
             
-            # Verificar Docker
-            echo "=== Verificando Docker ==="
+            # Check Docker
+            echo "=== Checking Docker ==="
             if command -v docker &> /dev/null; then
-              echo "✓ Docker encontrado: $(docker --version)"
+              echo "✓ Docker found: $(docker --version)"
             else
-              echo "✗ CRÍTICO: Docker NÃO ESTÁ INSTALADO"
-              echo "  Action necessária: Instale Docker no Oracle Cloud"
+              echo "✗ CRITICAL: Docker NOT INSTALLED"
+              echo "  Required action: Install Docker on Oracle Cloud"
               exit 1
             fi
             
             if command -v docker-compose &> /dev/null || docker compose --version &> /dev/null 2>&1; then
-              echo "✓ Docker Compose encontrado"
+              echo "✓ Docker Compose found"
             else
-              echo "✗ Docker Compose não encontrado"
+              echo "✗ Docker Compose not found"
               exit 1
             fi
             echo ""
             
-            # Definir diretório de trabalho
+            # Set working directory
             DEPLOY_DIR="${HOME}/financerto"
-            echo "=== Criando/Verificando Diretório de Deploy ==="
-            echo "Diretório: $DEPLOY_DIR"
+            echo "=== Creating/Checking Deploy Directory ==="
+            echo "Directory: $DEPLOY_DIR"
             
             if [ -d "$DEPLOY_DIR" ]; then
-              echo "✓ Diretório existe"
+              echo "✓ Directory exists"
             else
-              echo "  Criando diretório..."
+              echo "  Creating directory..."
               mkdir -p "$DEPLOY_DIR"
-              echo "✓ Diretório criado"
+              echo "✓ Directory created"
             fi
             echo ""
             
-            # Clone ou atualiza repositório
-            echo "=== Obtendo código do repositório ==="
+            # Clone or update repository
+            echo "=== Getting Repository Code ==="
             if [ -d "$DEPLOY_DIR/.git" ]; then
-              echo "  Repositório já existe. Atualizando..."
+              echo "  Repository exists. Updating..."
               cd "$DEPLOY_DIR"
               git pull origin main
             else
-              echo "  Clonando repositório..."
+              echo "  Cloning repository..."
               cd "$HOME"
               git clone https://github.com/Arthur-MARKOWICZ/FinCerto.git financerto
               cd "$DEPLOY_DIR"
             fi
-            echo "✓ Repositório atualizado"
+            echo "✓ Repository updated"
             echo ""
             
-            # Entrar no diretório
-            echo "=== Acessando Diretório ==="
-            echo "✓ Diretório atual: $(pwd)"
+            # Enter directory
+            echo "=== Accessing Directory ==="
+            echo "✓ Current directory: $(pwd)"
             
-            # Verificar docker-compose.yml
+            # Check docker-compose.yml
             if [ ! -f "docker-compose.yml" ]; then
-              echo "✗ ERRO: docker-compose.yml não encontrado em $DEPLOY_DIR"
-              echo "  Arquivos presentes:"
+              echo "✗ ERROR: docker-compose.yml not found in $DEPLOY_DIR"
+              echo "  Files present:"
               ls -la
               exit 1
             fi
-            echo "✓ docker-compose.yml encontrado"
+            echo "✓ docker-compose.yml found"
             echo ""
             
-            # Configurar variáveis de ambiente
-            echo "=== Configurando Variáveis de Ambiente ==="
+            # Setup environment variables
+            echo "=== Setting Environment Variables ==="
             export DB_USERNAME=${{ secrets.DB_USERNAME }}
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             export JWT_SECRET=${{ secrets.JWT_SECRET }}
-            echo "✓ Variáveis de ambiente configuradas"
+            echo "✓ Environment variables configured"
             echo ""
             
             # Deploy
-            echo "=== Limpando Ambiente Docker Anterior (Preservando Dados) ==="
-            # Para containers sem remover volumes de dados
+            echo "=== Cleaning Previous Docker Environment (Preserving Data) ==="
+            # For containers without removing data volumes
             docker-compose down --remove-orphans || true
             docker-compose rm -f || true
             
-            # Remove apenas imagens órfãs, mas preserva volumes com dados
+            # Remove only orphaned images, but preserve data volumes
             docker system prune -f || true
             docker image prune -f || true
             
-            echo "✓ Ambiente Docker limpo (volumes preservados)"
+            echo "✓ Docker environment cleaned (volumes preserved)"
             echo ""
             
-            echo "=== Iniciando Deploy com Docker Compose ==="
-            # Build sem cache apenas se necessário
+            echo "=== Starting Deploy with Docker Compose ==="
+            # Build without cache only if necessary
             docker-compose build
             docker-compose up -d --force-recreate
             
             echo ""
-            echo "========== ✓ DEPLOY FINALIZADO COM SUCESSO =========="
-            echo "Containers rodando:"
+            echo "========== ✓ DEPLOY COMPLETED SUCCESSFULLY =========="
+            echo "Running containers:"
             docker-compose ps
