@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   UsuarioCadastroDto, 
@@ -22,7 +23,9 @@ import {
 
 
 
-const API_BASE_URL = 'http://localhost:8080/api';
+// Default fallback for device testing, otherwise localhost
+// Use your machine's IP here if testing on physical device (e.g. 192.168.0.x)
+const API_BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:8080/api' : 'http://localhost:8080/api';
 const TOKEN_KEY = '@fincerto_token';
 
 const api = axios.create({
@@ -47,6 +50,33 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    if (!error.response) {
+      // Netowrk error or server offline
+      Alert.alert(
+        'Erro de Conexão',
+        'Não foi possível conectar ao servidor. Verifique sua internet ou tente novamente mais tarde.'
+      );
+    } else if (error.response.status === 401) {
+      // Unauthorized / Token expired
+      const token = await AsyncStorage.getItem(TOKEN_KEY);
+      if (token) {
+        Alert.alert(
+          'Sessão Expirada',
+          'Sua sessão expirou por segurança. Por favor, faça login novamente.'
+        );
+        await AsyncStorage.removeItem(TOKEN_KEY);
+        // It's ideal to trigger a logout in contexts, but Alert + token removal handles the basic safety
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const usuarioService = {
   cadastrar: async (dados: UsuarioCadastroDto): Promise<Usuario> => {

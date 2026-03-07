@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Account, AccountWithBalance } from '../../types';
@@ -101,7 +102,7 @@ const DashboardScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>FinCerto</Text>
@@ -137,7 +138,7 @@ const DashboardScreen: React.FC = () => {
           </View>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -161,7 +162,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
     paddingHorizontal: 20,
     paddingVertical: 24,
-    paddingTop: 60,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',

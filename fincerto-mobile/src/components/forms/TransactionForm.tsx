@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { TransactionType, TransacaoCadastroDto, Account, Category } from '../../types';
 import { transacaoService, contaService, categoriaService, storageService } from '../../services';
@@ -141,6 +142,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ visible, onClose, onS
     return (
       <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4CAF50" />
           <Text style={styles.loadingText}>Carregando...</Text>
         </View>
       </Modal>
@@ -210,7 +212,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ visible, onClose, onS
               placeholder="0,00"
               value={valor}
               onChangeText={setValor}
-              keyboardType="numeric"
+              keyboardType="decimal-pad"
             />
 
             <Text style={styles.label}>Descrição</Text>
@@ -300,6 +302,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
+    marginTop: 12,
     fontSize: 16,
     color: '#666',
   },

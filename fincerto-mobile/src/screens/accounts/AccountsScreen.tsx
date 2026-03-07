@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import { useFocusEffect, useNavigation, NavigationProp } from '@react-navigation/native';
 import { Account, AccountWithBalance } from '../../types';
@@ -99,7 +100,7 @@ const AccountsScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Contas</Text>
         <Text style={styles.totalBalance}>
@@ -138,7 +139,7 @@ const AccountsScreen: React.FC = () => {
         onClose={() => setShowForm(false)}
         onSuccess={loadAccountsWithBalance}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -162,7 +163,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
     paddingHorizontal: 20,
     paddingVertical: 24,
-    paddingTop: 60,
   },
   title: {
     fontSize: 28,

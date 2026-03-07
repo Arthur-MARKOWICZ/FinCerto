@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Category } from '../../types';
@@ -80,7 +81,7 @@ const CategoriesScreen: React.FC = () => {
   const despesas = getCategoriesByType('DESPESA');
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Categorias</Text>
         <Text style={styles.subtitle}>
@@ -152,7 +153,7 @@ const CategoriesScreen: React.FC = () => {
         onClose={() => setShowForm(false)}
         onSuccess={loadCategories}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -176,7 +177,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
     paddingHorizontal: 20,
     paddingVertical: 24,
-    paddingTop: 60,
   },
   title: {
     fontSize: 28,

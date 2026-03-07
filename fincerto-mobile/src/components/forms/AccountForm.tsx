@@ -137,7 +137,7 @@ const AccountForm: React.FC<AccountFormProps> = ({ visible, onClose, onSuccess }
               placeholder="0,00"
               value={saldoInicial}
               onChangeText={setSaldoInicial}
-              keyboardType="numeric"
+              keyboardType="decimal-pad"
             />
           </View>
         </ScrollView>

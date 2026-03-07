@@ -9,6 +9,7 @@ import {
   Alert,
   TouchableOpacity,
   Platform,
+  SafeAreaView,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Category } from '../../types';
@@ -159,7 +160,7 @@ const ReportsScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Relatórios</Text>
       </View>
@@ -224,7 +225,7 @@ const ReportsScreen: React.FC = () => {
           </View>
         </Card>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -248,7 +249,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
     paddingHorizontal: 20,
     paddingVertical: 24,
-    paddingTop: 60,
   },
   title: {
     fontSize: 28,

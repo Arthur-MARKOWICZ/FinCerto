@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Transaction } from '../../types';
@@ -88,7 +89,7 @@ const TransactionsScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Transações</Text>
         <View style={styles.summary}>
@@ -138,7 +139,7 @@ const TransactionsScreen: React.FC = () => {
         onClose={() => setShowForm(false)}
         onSuccess={loadTransactions}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -162,7 +163,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
     paddingHorizontal: 20,
     paddingVertical: 24,
-    paddingTop: 60,
   },
   title: {
     fontSize: 28,
